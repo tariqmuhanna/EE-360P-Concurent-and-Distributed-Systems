@@ -19,7 +19,7 @@ public class PSort extends RecursiveAction{
         if((A.length == 0 || begin >= end))
             return;
 
-        pool.invoke(new PSort(A, begin, end));
+        pool.invoke(new PSort(A, begin, end-1));
         pool.shutdown();
     }
 

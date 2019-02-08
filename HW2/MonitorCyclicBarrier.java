@@ -4,12 +4,12 @@
  */
 
 public class MonitorCyclicBarrier {
-	int initialParties; //total parties
-	int partiesAwait; //parties yet to arrive
+	int NumParties; //total parties
+	int count; //parties yet to arrive
 
 	public MonitorCyclicBarrier(int parties) {
-		initialParties=parties;
-		partiesAwait=parties;
+		NumParties=parties;
+        count=parties;
 	}
 
 	/**
@@ -23,21 +23,23 @@ public class MonitorCyclicBarrier {
 	 */
 	public synchronized int await() throws InterruptedException {
 
-		partiesAwait--; //decrements awaiting parties by 1.
+        count--; //decrements awaiting parties by 1.
 
-		//If the current thread is not the last to arrive, thread will wait.
-		if(partiesAwait>0){
+		// If the current thread is not the last to arrive, thread will wait.
+        // Threads will wait till we have reach the capacity
+		if(count>0){
 			this.wait();
 		}
-           /*If the current thread is last to arrive, notify all waiting threads, and
-            launch event*/
+		// Once the num of parties limit has been reached, we will begin notifying
+        // the threads to wake up
+
 		else{
-                  /* All parties have arrive, make partiesAwait equal to initialParties,
-                    so that CyclicBarrier could become cyclic. */
-			partiesAwait = initialParties;
+        // All parties have arrive, so reset count to NumParties'
+        // thus forming a "cyclic" barrier
+            count = NumParties;
 			notifyAll(); //notify all waiting threads
 		}
-		return partiesAwait;
+		return count;
 	}
 }
 

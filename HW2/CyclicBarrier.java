@@ -19,9 +19,9 @@ public class CyclicBarrier {
 	public int await() throws InterruptedException {
 		mutex.acquire();
 		int place = waitParties.availablePermits() -1;
-		
-		mutex.release();
 		waitParties.acquire();
+		mutex.release();
+		
 		
 		
 		while(waitParties.availablePermits() != 0 || flag == true);

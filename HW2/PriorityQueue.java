@@ -9,6 +9,7 @@ public class PriorityQueue {
 	}
 
 	public int add(String name, int priority) {
+		return priority;
         // Adds the name with its priority to this queue.
         // Returns the current position in the list where the name was inserted;
         // otherwise, returns -1 if the name is already present in the list.
@@ -16,11 +17,13 @@ public class PriorityQueue {
 	}
 
 	public int search(String name) {
+		return 0;
         // Returns the position of the name in the list;
         // otherwise, returns -1 if the name is not found.
 	}
 
 	public String getFirst() {
+		return null;
         // Retrieves and removes the name with the highest priority in the list,
         // or blocks the thread if the list is empty.
 	}

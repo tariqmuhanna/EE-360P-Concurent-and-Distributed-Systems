@@ -12,9 +12,10 @@ public class testBathroom implements Runnable {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+		int school = ThreadLocalRandom.current().nextInt(0, 2);
 		int sleepTime = ThreadLocalRandom.current().nextInt(0, 20);
 		if(Thread.currentThread().getId()%2 == 0) {
-			System.out.println("OU Thread running");
+			System.out.println("OU Thread running" + school);
 			bthrm.enterBathroomOU();
 			System.out.println("OU Thread " + Thread.currentThread().getId() + " enters room");
 			try {
@@ -29,7 +30,7 @@ public class testBathroom implements Runnable {
 			
 		}
 		else {
-			System.out.println("UT Thread running");
+			System.out.println("UT Thread running" + school);
 			bthrm.enterBathroomUT();
 			System.out.println("UT Thread " + Thread.currentThread().getId() + " enters room");
 			try {

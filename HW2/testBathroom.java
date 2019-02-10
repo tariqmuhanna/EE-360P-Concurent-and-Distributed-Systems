@@ -12,10 +12,11 @@ public class testBathroom implements Runnable {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		int school = ThreadLocalRandom.current().nextInt(0, 2);
-		int sleepTime = ThreadLocalRandom.current().nextInt(0, 20);
+		//int school = ThreadLocalRandom.current().nextInt(0, 2);
+		//int sleepTime = ThreadLocalRandom.current().nextInt(0, 4);
+		int sleepTime = 5;
 		if(Thread.currentThread().getId()%2 == 0) {
-			System.out.println("OU Thread running" + school);
+			System.out.println("OU Thread "+ Thread.currentThread().getId() + " running" );
 			bthrm.enterBathroomOU();
 			System.out.println("OU Thread " + Thread.currentThread().getId() + " enters room");
 			try {
@@ -30,7 +31,7 @@ public class testBathroom implements Runnable {
 			
 		}
 		else {
-			System.out.println("UT Thread running" + school);
+			System.out.println("UT Thread "+ Thread.currentThread().getId() + " running");
 			bthrm.enterBathroomUT();
 			System.out.println("UT Thread " + Thread.currentThread().getId() + " enters room");
 			try {
@@ -40,7 +41,7 @@ public class testBathroom implements Runnable {
 				e.printStackTrace();
 			}
 			bthrm.leaveBathroomUT();
-			System.out.println("UT Thread " + Thread.currentThread().getId() + " leaves room");
+			System.out.println("UT Thread " + Thread.currentThread().getId() + " left room");
 				
 		}
 		
@@ -56,6 +57,7 @@ public class testBathroom implements Runnable {
 			 
 		}
 		for (int i = 0; i < SIZE; ++i) {
+
 			t[i].start();
 		}
 	}

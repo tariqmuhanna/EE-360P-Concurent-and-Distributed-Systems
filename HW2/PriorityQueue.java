@@ -42,22 +42,27 @@ public class PriorityQueue {
 		}
 		int pos = 0;
 		Node ins = new Node(priority, name);
+		ins.next = null;
 		Node looper = head;
-		System.out.println("before while");
+		
 		while(looper.next != null) {
 			Node nextLooper = looper.next;
 			if(nextLooper.pri < priority) {
-				looper.nodeLock.lock();	//idk how to lock :0
-				nextLooper.nodeLock.lock();
+				//looper.nodeLock.lock();	 // each node can be individually locked, but this may cause deadlock :(
+				//nextLooper.nodeLock.lock();
+				lockList.lock();
 				try {
 					looper.next = ins;
 					ins.next = nextLooper;
 					index++;
 					notEmpty.signal();	
+					System.out.println(priority + " name " + name + " inserted to list at " + pos );
 				}finally {
-					looper.nodeLock.unlock();
-					nextLooper.nodeLock.unlock();
+					lockList.unlock();
+					//looper.nodeLock.unlock();
+					//nextLooper.nodeLock.unlock();
 				}
+				
 				return pos;
 				
 			}
@@ -65,15 +70,17 @@ public class PriorityQueue {
 			looper = looper.next;
 		}
 		if(looper.next == null) {//add to end of list
-			looper.nodeLock.lock();
+			//looper.nodeLock.lock();
+			lockList.lock();
 			try {
 				looper.next = ins;
 				index++;
 				notEmpty.signal();
 			}finally {
-				looper.nodeLock.unlock();
+				lockList.unlock();
+				//looper.nodeLock.unlock();
 			}
-			System.out.println("added to back / empty list");
+			System.out.println(priority + " name " + name + " inserted to back/empty at " + pos );
 		}
 			//not empty list. not sure if signal always or signal if queue.length == 1
 		return pos;
@@ -100,7 +107,7 @@ public class PriorityQueue {
 	}
 
 	public String getFirst()  {
-		while(index == 0) {
+		while(index == 0 || head.next == null) {
 			try {
 				notEmpty.await();
 			} catch (InterruptedException e) {
@@ -109,17 +116,26 @@ public class PriorityQueue {
 			}
 		}
 	
-		Lock a = head.next.nodeLock;
+		/*Lock a = head.next.nodeLock;
 		a.lock();
 		Lock b = head.next.next.nodeLock;
-		String retName = head.next.name;
-		b.lock();
-		head.next= head.next.next;
-		b.unlock();
-		a.unlock();
-		index--;
-		notFull.signalAll();
-		
+		b.lock();*/
+		lockList.lock();
+		String retName = null;
+		try {
+			if(head.next != null) {
+				retName = head.next.name;
+				head.next= head.next.next;
+				index--;
+				notFull.signal();
+			}
+			
+			/*b.unlock();
+			a.unlock();*/
+			
+		}finally {
+			lockList.unlock();
+		}
 		return retName;
         // Retrieves and removes the name with the highest priority in the list,
         // or blocks the thread if the list is empty.
@@ -127,7 +143,7 @@ public class PriorityQueue {
 	
 	class Node{
 		private int pri;
-		private String name;
+		private String name = null;
 		private Node next = null;
 		private Lock nodeLock = new ReentrantLock();
 		public Node (int p, String s) {

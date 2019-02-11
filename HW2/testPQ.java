@@ -1,7 +1,7 @@
 import java.util.concurrent.ThreadLocalRandom;
 
 public class testPQ implements Runnable{
-	final static int SIZE = 1;
+	final static int SIZE = 10;
 	final PriorityQueue queue;
 	public testPQ(PriorityQueue q) {
 		queue = q;
@@ -10,14 +10,14 @@ public class testPQ implements Runnable{
 	public void run() {
 		// TODO Auto-generated method stub
 		int rand = ThreadLocalRandom.current().nextInt(0, 10);
-		queue.add("lala", rand);
+		queue.add("id=" +Thread.currentThread().getId(), rand);
 		try {
 			Thread.sleep(rand);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//queue.getFirst();
+		System.out.println("first in line: " + queue.getFirst());
 		
 	}
 	

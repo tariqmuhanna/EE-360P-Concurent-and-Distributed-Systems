@@ -1,4 +1,5 @@
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 public class testPQ implements Runnable{
 	final static int SIZE = 10;
@@ -9,10 +10,13 @@ public class testPQ implements Runnable{
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+		
 		int rand = ThreadLocalRandom.current().nextInt(0, 10);
-		queue.add("id=" +Thread.currentThread().getId(), rand);
 		try {
-			Thread.sleep(rand);
+			
+			queue.add("id=" +Thread.currentThread().getId(), rand);
+		
+			Thread.sleep(rand/5);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -22,8 +26,8 @@ public class testPQ implements Runnable{
 	}
 	
 	public static void main(String[] args) {
-			
-			PriorityQueue test = new PriorityQueue(10);
+		    Random r = new Random();
+			PriorityQueue test = new PriorityQueue(9);
 			Thread[] t = new Thread[SIZE];
 			for(int i = 0; i < SIZE; i++) {
 				Thread myThread = new Thread(new testPQ(test));
@@ -32,7 +36,15 @@ public class testPQ implements Runnable{
 				 
 			}
 			for (int i = 0; i < SIZE; i++) {
-	
+				
+				int rand = r.nextInt(20);
+				try {
+					if(rand%3 == 0)
+						Thread.sleep(rand);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				t[i].start();
 			}
 	}

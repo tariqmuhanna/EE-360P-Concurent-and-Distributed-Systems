@@ -9,8 +9,11 @@ import java.util.HashMap;
 // EID 2
 
 public class PriorityQueue {
+	
+	
 	private int max = 0;
 	private Entry<Integer, String>[] queue;
+	private Node head;
 	private int index = 0;
 	final ReentrantLock lockList = new ReentrantLock();
 	final Condition notFull = lockList.newCondition();
@@ -19,32 +22,61 @@ public class PriorityQueue {
 	public PriorityQueue(int maxSize) {
         // Creates a Priority queue with maximum allowed size as capacity
 		max = maxSize;
+		head = new Node(Integer.MAX_VALUE, null);
 		queue = new SimpleEntry[max];
 	}
 
-	public int add(String name, int priority) throws InterruptedException {
-		if(search(name) == -1)
+	public int add(String name, int priority)  {
+		if(search(name) != -1)
 			return -1;
 		//returns -1 if name is present
 		
 		while(index == max) {
-			notFull.await();
+			try {
+				notFull.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			//wait for the queue to empty out if index is already out of bounds
 		}
-
-		Entry<Integer,String> newEntry = new SimpleEntry<>(priority, name);
-		for(int i = 0; i < max; i ++) {	//loop through list
-			if(queue[i].getKey() < priority) {	//if the current priority is bigger than next in list
-				for(int k = index; k > i; k--) {	//move everything after insertion point back
-					queue[k] = queue[k-1];
+		int pos = 0;
+		Node ins = new Node(priority, name);
+		Node looper = head;
+		System.out.println("before while");
+		while(looper.next != null) {
+			Node nextLooper = looper.next;
+			if(nextLooper.pri < priority) {
+				looper.nodeLock.lock();	//idk how to lock :0
+				nextLooper.nodeLock.lock();
+				try {
+					looper.next = ins;
+					ins.next = nextLooper;
+					index++;
+					notEmpty.signal();	
+				}finally {
+					looper.nodeLock.unlock();
+					nextLooper.nodeLock.unlock();
 				}
-				queue[i] = newEntry;
-				break;
+				return pos;
+				
 			}
+			pos++;
+			looper = looper.next;
 		}
-		index++;
-		notEmpty.signalAll();	//not empty list. not sure if signal always or signal if queue.length == 1
-		return priority;
+		if(looper.next == null) {//add to end of list
+			looper.nodeLock.lock();
+			try {
+				looper.next = ins;
+				index++;
+				notEmpty.signal();
+			}finally {
+				looper.nodeLock.unlock();
+			}
+			System.out.println("added to back / empty list");
+		}
+			//not empty list. not sure if signal always or signal if queue.length == 1
+		return pos;
         // Adds the name with its priority to this queue.
         // Returns the current position in the list where the name was inserted;
         // otherwise, returns -1 if the name is already present in the list.
@@ -52,26 +84,39 @@ public class PriorityQueue {
 	}
 
 	public int search(String name) {
-		int pos = -1;
-		for(Entry<Integer, String> e : queue) {
-			if(e.getValue().equals(name))
-				pos = e.getKey();
-			
+		int pos = 0;
+		Node looper = head.next;
+		while(looper != null) {
+			if(looper.name.equals(name)) {
+				return pos;
+			}
+			looper = looper.next;
+			pos++;
 		}
-		return pos;
+		
+		return -1;
         // Returns the position of the name in the list;
         // otherwise, returns -1 if the name is not found.
 	}
 
-	public String getFirst() throws InterruptedException {
+	public String getFirst()  {
 		while(index == 0) {
-			notEmpty.await();
+			try {
+				notEmpty.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		
-		String retName = queue[0].getValue();
-		for(int i = 0; i < index-1; i++) {
-			queue[i] = queue[i+1];
-		}
+	
+		Lock a = head.next.nodeLock;
+		a.lock();
+		Lock b = head.next.next.nodeLock;
+		String retName = head.next.name;
+		b.lock();
+		head.next= head.next.next;
+		b.unlock();
+		a.unlock();
 		index--;
 		notFull.signalAll();
 		
@@ -79,5 +124,20 @@ public class PriorityQueue {
         // Retrieves and removes the name with the highest priority in the list,
         // or blocks the thread if the list is empty.
 	}
+	
+	class Node{
+		private int pri;
+		private String name;
+		private Node next = null;
+		private Lock nodeLock = new ReentrantLock();
+		public Node (int p, String s) {
+			pri = p;
+			name = s;
+		}
+		
+		
+		
+	}
 }
+
 

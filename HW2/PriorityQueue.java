@@ -53,10 +53,14 @@ public class PriorityQueue {
 					looper.next = ins;
 					ins.next = nextLooper;
 					index++;
-					if(index == 1)
-						notEmpty.signal();	// should i only signal if index = 1?
-					System.out.println(priority + " name " + name + " inserted to list at " + pos );
-				
+					lockList.lock();
+					try{
+						if(index == 1)
+							notEmpty.signal();	// should i only signal if index = 1?
+						System.out.println(priority + " name " + name + " inserted to list at " + pos );
+					}finally {
+						lockList.unlock();
+					}
 				
 					return pos; //not returning correct pos rn
 					
@@ -127,17 +131,34 @@ public class PriorityQueue {
 			}
 		}
 		String retName = null;
-		Node first = head.next;
-		first.nodeLock.lock();
-		head.nodeLock.lock();
+		Node first;
+		try {
+			first = head.next;
+			if(first == null) {
+				System.out.println("list empty");
+				
+			}
+			else {	
+				first.nodeLock.lock();
+				head.nodeLock.lock();
+			}
+		}finally {
 		lockList.unlock();
+		}
+		
 		try {
 			if(first != null) {
 				retName = first.name;	//pop the first person
 				head.next= first.next;	//set head.next to be second guy
 				index--;	//decrement size
-				if(index == max-1)
-					notFull.signal();
+				
+				lockList.lock();
+				try {
+					if(index == max-1)
+						notFull.signal();
+				}finally {
+					lockList.unlock();
+				}
 			}
 		}finally {
 			head.nodeLock.unlock();

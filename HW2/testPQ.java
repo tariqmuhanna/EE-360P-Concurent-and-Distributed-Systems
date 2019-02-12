@@ -2,21 +2,21 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
 
 public class testPQ implements Runnable{
-	final static int SIZE = 5;
+	final static int SIZE = 20;
 	final PriorityQueue queue;
 	public testPQ(PriorityQueue q) {
 		queue = q;
 	}
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
+		// TODO Auto-gnerated method stub
 		
 		int rand = ThreadLocalRandom.current().nextInt(0, 10);
 		try {
 			
 			queue.add("id=" +Thread.currentThread().getId(), rand);
 			
-			Thread.sleep(rand/5);
+			Thread.sleep(rand/2);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

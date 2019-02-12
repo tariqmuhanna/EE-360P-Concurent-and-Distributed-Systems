@@ -2,7 +2,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
 
 public class testPQ implements Runnable{
-	final static int SIZE = 10;
+	final static int SIZE = 5;
 	final PriorityQueue queue;
 	public testPQ(PriorityQueue q) {
 		queue = q;
@@ -15,7 +15,7 @@ public class testPQ implements Runnable{
 		try {
 			
 			queue.add("id=" +Thread.currentThread().getId(), rand);
-		
+			
 			Thread.sleep(rand/5);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block

@@ -121,8 +121,8 @@ public class FairUnifanBathroom {
         if (free_resources == 0 || ouUsingN > 0 || peekHelper(line) == 1) {
             utWaitingN++;
             line.add(0);
-//            System.out.println("UT using: " + utUsingN + " UT waitng: " + utWaitingN);
-//            System.out.println("OU using: " + ouUsingN + " OU waiting: " + ouWaitingN + '\n');
+            System.out.println("UT using: " + utUsingN + " UT waitng: " + utWaitingN);
+            System.out.println("OU using: " + ouUsingN + " OU waiting: " + ouWaitingN + '\n');
         }
         while (free_resources == 0 || ouUsingN > 0 || peekHelper(line) == 1) {
             try {

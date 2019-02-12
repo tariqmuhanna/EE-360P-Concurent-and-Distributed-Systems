@@ -1,5 +1,4 @@
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+
 
 public class testBathroom implements Runnable {
 	final static int SIZE = 35;

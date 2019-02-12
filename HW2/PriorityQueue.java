@@ -25,11 +25,10 @@ public class PriorityQueue {
 	}
 
 	public int add(String name, int priority)  {
-		lockList.lock(); //I think I'm doing a global lock here, not hand over hand?
 		if(search(name) != -1)
 			return -1;
 
-
+		lockList.lock();
 		while(index == max) { 
 			try {
 				notFull.await();
@@ -39,52 +38,52 @@ public class PriorityQueue {
 			}
 			//wait for the queue to empty out if index is already out of bounds
 		}
-		
-		int pos = 0; //this is how i'm trying to keep track of position, but i think it doesn't work becuase
-		//too many threads are changing it's value at one time. should i lock this, or is there a better way?
+		lockList.unlock();
+		int pos = 0; 
 		Node ins = new Node(priority, name); //list is not full, ins is new node to be inserted
 		ins.next = null;
 		Node looper = head; //start at the head and put ins at the first place it's priority is higher than the next node
 		
 		while(looper.next != null) { 
-			//while looper and looper.next are not null, we check if we can do: looper -> ins -> looper.next
+			looper.nodeLock.lock();
 			Node nextLooper = looper.next;
-			if(nextLooper.pri < priority) {
-				
-				//looper.nodeLock.lock();	//locking the node individual causes many exceptions
-				//nextLooper.nodeLock.lock();
-				
-				
-				try {
+			nextLooper.nodeLock.lock();
+			try {
+				if(nextLooper.pri < priority) {
 					looper.next = ins;
 					ins.next = nextLooper;
 					index++;
 					if(index == 1)
 						notEmpty.signal();	// should i only signal if index = 1?
 					System.out.println(priority + " name " + name + " inserted to list at " + pos );
-				}finally {
-					lockList.unlock();
-					//looper.nodeLock.unlock();
-					//nextLooper.nodeLock.unlock();
+				
+				
+					return pos; //not returning correct pos rn
+					
 				}
-				
-				return pos; //not returning correct pos rn
-				
+				pos++;
+			}finally {
+				looper.nodeLock.unlock();
+				nextLooper.nodeLock.unlock();
 			}
-			pos++;
 			looper = looper.next;
 		}
-		if(looper.next == null) {//add to end of list (either the list is empty, or ins has lowest priority
-			//looper.nodeLock.lock();
-			
+		if(looper.next == null) {
+			looper.nodeLock.lock();
 			try {
 				looper.next = ins;
 				index++;
-				if(index == 1)
-					notEmpty.signal();
+				if(index == 1) {
+					lockList.lock();
+					try {
+						notEmpty.signal();
+					}finally {
+						lockList.unlock();
+					}
+				
+				}
 			}finally {
-				lockList.unlock();
-				//looper.nodeLock.unlock();
+				looper.nodeLock.unlock();
 			}
 			System.out.println(priority + " name " + name + " inserted to back/empty at " + pos );
 		}
@@ -98,15 +97,20 @@ public class PriorityQueue {
 
 	public int search(String name) {
 		int pos = 0;
+		
 		Node looper = head.next;
 		while(looper != null) {
-			if(looper.name.equals(name)) {
-				return pos;
+			looper.nodeLock.lock();
+			try {
+				if(looper.name.equals(name)) {
+					return pos;
+			}
+			}finally {
+				looper.nodeLock.unlock();
 			}
 			looper = looper.next;
 			pos++;
 		}
-
 		return -1;
         // Returns the position of the name in the list;
         // otherwise, returns -1 if the name is not found.
@@ -122,27 +126,22 @@ public class PriorityQueue {
 				e.printStackTrace();
 			}
 		}
-	
-		/*Lock a = head.next.nodeLock;
-		a.lock();
-		Lock b = head.next.next.nodeLock;
-		b.lock();*/
-		
 		String retName = null;
+		Node first = head.next;
+		first.nodeLock.lock();
+		head.nodeLock.lock();
+		lockList.unlock();
 		try {
-			if(head.next != null) {
-				retName = head.next.name;	//pop the first person
-				head.next= head.next.next;	//set head.next to be second guy
+			if(first != null) {
+				retName = first.name;	//pop the first person
+				head.next= first.next;	//set head.next to be second guy
 				index--;	//decrement size
 				if(index == max-1)
 					notFull.signal();
 			}
-			
-			/*b.unlock();
-			a.unlock();*/
-			
 		}finally {
-			lockList.unlock();
+			head.nodeLock.unlock();
+			first.nodeLock.unlock();
 		}
 		return retName;
         // Retrieves and removes the name with the highest priority in the list,
@@ -154,7 +153,6 @@ public class PriorityQueue {
 		private String name = null;
 		private Node next = null;
 		private Lock nodeLock = new ReentrantLock(); 
-		//this is also questionable, can I lock the node itself? 
 		public Node (int p, String s) {
 			pri = p;
 			name = s;

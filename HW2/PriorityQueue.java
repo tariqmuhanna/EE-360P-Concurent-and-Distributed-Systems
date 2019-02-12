@@ -77,17 +77,13 @@ public class PriorityQueue {
 			looper.nodeLock.lock();
 			try {
 				looper.next = ins;
+				lockList.lock();
 				index++;
-				if(index == 1) {
-					lockList.lock();
-					try {
-						notEmpty.signal();
-					}finally {
-						lockList.unlock();
-					}
+				if(index == 1) 
+					notEmpty.signal();
 				
-				}
 			}finally {
+				lockList.unlock();
 				looper.nodeLock.unlock();
 			}
 			System.out.println(priority + " name " + name + " inserted to back/empty at " + pos );
@@ -123,7 +119,7 @@ public class PriorityQueue {
 
 	public String getFirst()  {
 		lockList.lock();
-		while(index == 0) {
+		while(index == 0 || head.next == null) {
 			try {
 				notEmpty.await();	//wait for list not to be empty
 			} catch (InterruptedException e) {
@@ -151,8 +147,9 @@ public class PriorityQueue {
 			if(first != null) {
 				retName = first.name;	//pop the first person
 				head.next = nextFirst;	//set head.next to be second guy
-				index--;	//decrement size
+				
 				lockList.lock();
+				index--;	//decrement size
 				try {
 					if(index == max-1)
 						notFull.signal();

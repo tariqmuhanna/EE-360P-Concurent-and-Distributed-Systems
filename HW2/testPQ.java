@@ -2,7 +2,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.Random;
 
 public class testPQ implements Runnable{
-	final static int SIZE = 20;
+	final static int SIZE = 30;
 	final PriorityQueue queue;
 	public testPQ(PriorityQueue q) {
 		queue = q;
@@ -17,17 +17,18 @@ public class testPQ implements Runnable{
 			queue.add("id=" +Thread.currentThread().getId(), rand);
 			
 			Thread.sleep(rand/2);
+			System.out.println("first in line: " + queue.getFirst());
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("first in line: " + queue.getFirst());
+		
 		
 	}
 	
 	public static void main(String[] args) {
 		    Random r = new Random();
-			PriorityQueue test = new PriorityQueue(9);
+			PriorityQueue test = new PriorityQueue(11);
 			Thread[] t = new Thread[SIZE];
 			for(int i = 0; i < SIZE; i++) {
 				Thread myThread = new Thread(new testPQ(test));

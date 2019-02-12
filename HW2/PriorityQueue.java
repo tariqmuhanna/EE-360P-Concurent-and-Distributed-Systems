@@ -131,28 +131,27 @@ public class PriorityQueue {
 				e.printStackTrace();
 			}
 		}
-		String retName = null;
-		Node first;
-		try {
-			first = head.next;
-			if(first == null) {
-				System.out.println("list empty");
-				
-			}
-			else {	
-				first.nodeLock.lock();
-				head.nodeLock.lock();
-			}
-		}finally {
 		lockList.unlock();
-		}
 		
+		String retName = null;
+		Node first = null;
+		Node nextFirst = null;
+		
+		head.nodeLock.lock();
+		first = head.next;
+		if(first != null){
+			first.nodeLock.lock();
+			if(first.next != null) {
+				nextFirst = first.next;
+				nextFirst.nodeLock.lock();
+			}
+		}
+	
 		try {
 			if(first != null) {
 				retName = first.name;	//pop the first person
-				head.next= first.next;	//set head.next to be second guy
+				head.next = nextFirst;	//set head.next to be second guy
 				index--;	//decrement size
-				
 				lockList.lock();
 				try {
 					if(index == max-1)
@@ -163,7 +162,10 @@ public class PriorityQueue {
 			}
 		}finally {
 			head.nodeLock.unlock();
-			first.nodeLock.unlock();
+			if(first != null)
+				first.nodeLock.unlock();
+			if(nextFirst != null)
+				nextFirst.nodeLock.unlock();
 		}
 		return retName;
         // Retrieves and removes the name with the highest priority in the list,

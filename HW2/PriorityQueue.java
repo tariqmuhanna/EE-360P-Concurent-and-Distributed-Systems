@@ -39,6 +39,7 @@ public class PriorityQueue {
 			//wait for the queue to empty out if index is already out of bounds
 		}
 		lockList.unlock();
+		
 		int pos = 0; 
 		Node ins = new Node(priority, name); //list is not full, ins is new node to be inserted
 		ins.next = null;
@@ -50,8 +51,8 @@ public class PriorityQueue {
 			nextLooper.nodeLock.lock();
 			try {
 				if(nextLooper.pri < priority) {
-					looper.next = ins;
 					ins.next = nextLooper;
+					looper.next = ins;
 					index++;
 					lockList.lock();
 					try{

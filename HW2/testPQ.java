@@ -17,7 +17,7 @@ public class testPQ implements Runnable{
 			queue.add("id=" +Thread.currentThread().getId(), rand);
 			
 			Thread.sleep(rand/2);
-			System.out.println("first in line: " + queue.getFirst());
+			System.out.println("first in line: "+ queue.getFirst());
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -25,29 +25,28 @@ public class testPQ implements Runnable{
 		
 		
 	}
-	
 	public static void main(String[] args) {
-		    Random r = new Random();
-			PriorityQueue test = new PriorityQueue(11);
-			Thread[] t = new Thread[SIZE];
-			for(int i = 0; i < SIZE; i++) {
-				Thread myThread = new Thread(new testPQ(test));
-				
-				 t[i] = myThread;
-				 
+		Random r = new Random();
+		PriorityQueue test = new PriorityQueue(11);
+		Thread[] t = new Thread[SIZE];
+		for(int i = 0; i < SIZE; i++) {
+			Thread myThread = new Thread(new testPQ(test));
+			
+			 t[i] = myThread;
+			 
+		}
+		for (int i = 0; i < SIZE; i++) {
+			
+			int rand = r.nextInt(20);
+			try {
+				if(rand%3 == 0)
+					Thread.sleep(rand);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			for (int i = 0; i < SIZE; i++) {
-				
-				int rand = r.nextInt(20);
-				try {
-					if(rand%3 == 0)
-						Thread.sleep(rand);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				t[i].start();
-			}
+			t[i].start();
+		}
 	}
 
 }

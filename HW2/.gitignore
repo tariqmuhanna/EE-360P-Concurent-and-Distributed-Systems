@@ -16,3 +16,10 @@
 /testMonitorCyclicBarrier.class
 /Executor.class
 /testing.class
+/testCyclicBarrier$MarkedStatus.class
+/testCyclicBarrier$SimpleTester.class
+/testCyclicBarrier$Status.class
+/testCyclicBarrierGrader$MarkedStatus.class
+/testCyclicBarrierGrader$SimpleTester.class
+/testCyclicBarrierGrader$Status.class
+/testCyclicBarrierGrader.class

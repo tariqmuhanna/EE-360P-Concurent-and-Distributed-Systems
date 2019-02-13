@@ -1,4 +1,5 @@
-
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.*;
 import java.util.List.*;
 import java.util.Map;
@@ -12,7 +13,7 @@ public class PriorityQueue {
 	
 	private int max = 0;
 	private Node head;	//head of linked list
-	private int index = 0; //index is more like count; 0 is empty, max is full
+	AtomicInteger index = new AtomicInteger(0); //index is more like count; 0 is empty, max is full
 	final ReentrantLock lockList = new ReentrantLock();
 	final Condition notFull = lockList.newCondition();
 	final Condition notEmpty = lockList.newCondition();
@@ -28,10 +29,8 @@ public class PriorityQueue {
 		if(search(name) != -1)
 			return -1;
 
-		System.out.println("id=" +Thread.currentThread().getId() + "lock1 add");
 		lockList.lock();
-		System.out.println("id=" +Thread.currentThread().getId() + "lock1 add obtained");
-		while(index == max) { 
+		while(index.get() == max) { 
 			try {
 				notFull.await();
 			} catch (InterruptedException e) {
@@ -48,31 +47,20 @@ public class PriorityQueue {
 		Node looper = head; //start at the head and put ins at the first place it's priority is higher than the next node
 		
 		while(looper.next != null) { 
-			
-			Node nextLooper = looper.next;
-
-			System.out.println("id=" +Thread.currentThread().getId() + "looper nodelock");
 			looper.nodeLock.lock();
-			System.out.println("id=" +Thread.currentThread().getId() + "looper nodelock obtained");
-		    System.out.println("id=" +Thread.currentThread().getId() + "nextlooper nodelock");
+			Node nextLooper = looper.next;
 			nextLooper.nodeLock.lock();
-			System.out.println("id=" +Thread.currentThread().getId() + "nextooper nodelock obtained");
 			try {
 				if(nextLooper.pri < priority) {
 					ins.next = nextLooper;
 					looper.next = ins;
-
-					System.out.println("id=" +Thread.currentThread().getId() + "insertion lockList");
+					index.getAndIncrement();
 					lockList.lock();
-					System.out.println("id=" +Thread.currentThread().getId() + "insertion lockList obtained");
-					index++;
 					try{
-						if(index == 1)
+						if(index.get() == 1)
 							notEmpty.signal();	// should i only signal if index = 1?
 						System.out.println(priority + " name " + name + " inserted to list at " + pos );
 					}finally {
-						//looper.nodeLock.unlock();
-						//nextLooper.nodeLock.unlock();
 						lockList.unlock();
 					}
 				
@@ -86,21 +74,21 @@ public class PriorityQueue {
 			}
 			looper = looper.next;
 		}
-		
 		if(looper.next == null) {
-
-			System.out.println("id=" +Thread.currentThread().getId() + "last place nodelock");
 			looper.nodeLock.lock();
-			System.out.println("id=" +Thread.currentThread().getId() + "last place nodelock obtained");
 			try {
 				looper.next = ins;
-				lockList.lock();
-				index++;
-				if(index == 1) 
-					notEmpty.signal();
+				index.getAndIncrement();
+				if(index.get() == 1) {
+					lockList.lock();
+					try {
+						notEmpty.signal();
+					}finally {
+						lockList.unlock();
+					}
 				
+				}
 			}finally {
-				lockList.unlock();
 				looper.nodeLock.unlock();
 			}
 			System.out.println(priority + " name " + name + " inserted to back/empty at " + pos );
@@ -118,17 +106,14 @@ public class PriorityQueue {
 		
 		Node looper = head.next;
 		while(looper != null) {
-
-//			System.out.println("id=" +Thread.currentThread().getId() + "search nodelock");
-//			looper.nodeLock.lock();
-//			System.out.println("id=" +Thread.currentThread().getId() + "search nodelock obtained");
-//			try {
-				if(looper.name.equals(name)) 
+			looper.nodeLock.lock();
+			try {
+				if(looper.name.equals(name)) {
 					return pos;
-
-//			}finally {
-//				looper.nodeLock.unlock();
-//			}
+			}
+			}finally {
+				looper.nodeLock.unlock();
+			}
 			looper = looper.next;
 			pos++;
 		}
@@ -138,14 +123,10 @@ public class PriorityQueue {
 	}
 
 	public String getFirst()  {
-
-		System.out.println("id=" +Thread.currentThread().getId() + "getfirst lock");
 		lockList.lock();
-		System.out.println("id=" +Thread.currentThread().getId() + "getfirst lock obtained");
-		while(index == 0 || head.next == null) {
+		while(index.get() == 0) {
 			try {
 				notEmpty.await();	//wait for list not to be empty
-				System.out.println("popping");
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -153,41 +134,39 @@ public class PriorityQueue {
 		}
 		lockList.unlock();
 		
-		
 		String retName = null;
-		Node first = head.next;
-
+		Node first = null;
+		Node nextFirst = null;
 		
-		
-		if(first != null) {
-			System.out.println("id=" +Thread.currentThread().getId() + "head nodelock");
-			head.nodeLock.lock();
-			System.out.println("id=" +Thread.currentThread().getId() + "head nodelock obtained, now get first nodelock");
+		head.nodeLock.lock();
+		first = head.next;
+		if(first != null){
 			first.nodeLock.lock();
-			System.out.println("id=" +Thread.currentThread().getId() + "first nodelock obtained");
-			try {
-				retName = first.name;	//pop the first person
-				head.next = first.next;	//set head.next to be second guy
-				index--;	//decrement size
-			
-			}finally {
-				first.nodeLock.unlock();
-				head.nodeLock.unlock();
-				
+			if(first.next != null) {
+				nextFirst = first.next;
+				nextFirst.nodeLock.lock();
 			}
-			if(index == max-1) {
-
-				System.out.println("id=" +Thread.currentThread().getId() + "full lock");
+		}
+	
+		try {
+			if(first != null) {
+				retName = first.name;	//pop the first person
+				head.next = nextFirst;	//set head.next to be second guy
+				index.getAndDecrement();	//decrement size
 				lockList.lock();
-				System.out.println("id=" +Thread.currentThread().getId() + "full lock obtained");
 				try {
-					notFull.signal();
+					if(index.get() == max-1)
+						notFull.signal();
 				}finally {
 					lockList.unlock();
 				}
 			}
-		
-			
+		}finally {
+			head.nodeLock.unlock();
+			if(first != null)
+				first.nodeLock.unlock();
+			if(nextFirst != null)
+				nextFirst.nodeLock.unlock();
 		}
 		return retName;
         // Retrieves and removes the name with the highest priority in the list,
@@ -208,5 +187,3 @@ public class PriorityQueue {
 		
 	}
 }
-
-

@@ -8,9 +8,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CyclicBarrier {
 	Semaphore holdTillFull;
 	Semaphore waitParties;
+	boolean flag = false;
 	int numParties = 0;
 	AtomicInteger count = new AtomicInteger(0);
-	boolean flag = false;
+	
 	public CyclicBarrier(int parties) {
 		holdTillFull = new Semaphore(parties, true);
 		//wait until all permits from waitParties are acquired before trying to obtain a holdTillFull permit,
@@ -23,23 +24,31 @@ public class CyclicBarrier {
 		
 	
 		waitParties.acquire();	//try to get a permit
-		int place = count.getAndIncrement();
-		System.out.println("Thread" + Thread.currentThread().getId() + " has gotten waitParties permit at " + place);
 		
+		//System.out.println("Thread" + Thread.currentThread().getId() + " has gotten waitParties permit ");
 		
-		while(count.get() < numParties) {
+		while(flag || count.get() >= numParties) {
 			//wait here until 5 threads have gotten permits
 		}
-		System.out.println("Thread" + Thread.currentThread().getId() + " has obtained full party");
-		
+		int place = count.getAndIncrement();
 		holdTillFull.acquire();
-		System.out.println("Thread" + Thread.currentThread().getId() + " has obtained holdTillFull ");
-		count.getAndDecrement();
-		System.out.println("Thread" + Thread.currentThread().getId() + " has count--");
-		while(count.get() != 0);
+		
+		//System.out.println("Thread" + Thread.currentThread().getId() + " has obtained holdTillFull at " + place);
+		
+		
+		while(count.get() != numParties && !flag) {}
+		//System.out.println(place+ " Thread" + Thread.currentThread().getId() + " has count--");
+		
+		flag = true;
+    	//System.out.println(place + " flag to true");
+		//System.out.println(place + " Thread" + Thread.currentThread().getId() + " is releasing permits");
 		waitParties.release();
 		holdTillFull.release();
-        
+		count.getAndDecrement();
+        if(holdTillFull.availablePermits() == numParties) {
+        	flag = false;
+        	//System.out.println(place +" flag to false");
+        }
 	    return place;
 	}
 }

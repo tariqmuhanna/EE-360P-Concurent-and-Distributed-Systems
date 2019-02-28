@@ -1,8 +1,9 @@
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
-
+import java.net.*;
 public class CarServer {
 	private static ArrayList<inventory> stock = new ArrayList<inventory>();
 	public static void main (String[] args) {
@@ -46,7 +47,38 @@ public class CarServer {
 	    // parse the inventory file
 	
 	    // TODO: handle request from clients
-	  }
+	    // UDP:
+		DatagramPacket datapacket, returnpacket;
+		int len = 1024;
+		try {
+			DatagramSocket datasocket = new DatagramSocket(udpPort);
+			byte[] buf = new byte[len];
+			while (true) {
+				datapacket = new DatagramPacket(buf, buf.length);
+				datasocket.receive(datapacket);
+				byte[] recmsg = datapacket.getData();
+				System.out.println(recmsg[0]);
+				
+				
+				returnpacket = new DatagramPacket(
+						datapacket.getData(),
+						datapacket.getLength(),
+						datapacket.getAddress(),
+						datapacket.getPort());
+				datasocket.send(returnpacket);
+			}
+		} catch (SocketException e) {
+			System.err.println(e);
+	    // TCP:
+	    
+	    
+	    
+	    
+	  } catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }
 class inventory{
 	String name;

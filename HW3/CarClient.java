@@ -41,7 +41,7 @@ public class CarClient {
         // Initialize communication ports and reading set up
         try {
             Scanner sc = new Scanner(new FileReader(commandFile));  // Scanner of reading input
-            InetAddress IA = InetAddress.getByName(hostAddress);  // Establish Inet address
+            InetAddress IA = InetAddress.getByName(hostAddress);    // Establish Inet address
             DatagramSocket dataSocket = new DatagramSocket();       // UDP protocol
             Socket tcpSocket = new Socket(hostAddress, tcpPort);    // TCP protocol
 
@@ -56,6 +56,7 @@ public class CarClient {
                     if(tokens[1].equals("U"))      protocol = "U";
                     else if(tokens[1].equals("T")) protocol = "T";
 
+
                 } else if (tokens[0].equals("rent")) {
                     // Inputs the name of customer, brand of car,
                     // and color required for car rental
@@ -64,12 +65,14 @@ public class CarClient {
                     else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
+
                 } else if (tokens[0].equals("return")) {
                     // Returns the car associated with the <record-id>
                     if(protocol.equals("U"))
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
                     else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+
 
                 } else if (tokens[0].equals("inventory")) {
                     // Lists all available cars in the rental service
@@ -78,6 +81,7 @@ public class CarClient {
                     else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
+
                 } else if (tokens[0].equals("list")) {
                     // Lists all cars borrowed by the customer along with their color
                     if(protocol.equals("U"))
@@ -85,10 +89,26 @@ public class CarClient {
                     else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
+
                 } else if (tokens[0].equals("exit")) {
                     // Informs server to stop processing commands from
                     // this client and print the current state of the
                     // inventory to inventory file named as “inventory.txt.”
+//                    PrintWriter exit_msg = new PrintWriter(tcpSocket.getOutputStream(), true);
+//                    exit_msg.println(cmd);
+//                    exit_msg.close();
+
+                    byte[] buffer = new byte[cmd.length()];
+                    buffer = cmd.getBytes();
+                    DatagramPacket sPacket = new DatagramPacket(buffer, cmd.length(), IA, udpPort);
+                    dataSocket.send(sPacket);
+                    dataSocket.close();
+                    sc.close();
+
+                    fwriter.close();
+                    pwriter.close();
+                    System.exit(0);
+                    break;
 
                 } else {
                     System.out.println("ERROR: No such command");
@@ -106,15 +126,24 @@ public class CarClient {
     }
 
     // Compose and receive TCP protocol type messages
-    private static void TCPMessage(String cmd, Socket tcpSocket, int port, PrintWriter pwriter, int len) throws IOException {
-        PrintWriter out = new PrintWriter(tcpSocket.getOutputStream(), true);
+    private static void TCPMessage(String input, Socket tcpSocket, int port, PrintWriter pwriter, int len) throws IOException {
+        PrintWriter out = new PrintWriter(tcpSocket.getOutputStream(), true); // to send out to server
+        out.println(input);
 
+        BufferedReader in = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream())); // to read from server
+        String server_in;
+        if ((server_in = in.readLine().trim()) != null) {   // printing ack
+            System.out.println(server_in);
+            pwriter.println(server_in);
+        }
     }
 
+
     // Compose and receive UDP protocol type messages
-    public static void UDPMessage(String cmd, DatagramSocket datasocket, InetAddress inet, int port, PrintWriter pwriter, int buff_length) throws IOException {
-        byte[] buffer = new byte[buff_length];
+    public static void UDPMessage(String input, DatagramSocket datasocket, InetAddress inet, int port, PrintWriter pwriter, int buff_length) throws IOException {
+        byte[] buffer = new byte[input.length()];
         byte[] rbuffer = new byte[buff_length];
+        buffer = input.getBytes();
         DatagramPacket sPacket = new DatagramPacket(buffer,         // Create sending packet
                 buffer.length, inet, port);
         datasocket = new DatagramSocket();
@@ -125,8 +154,7 @@ public class CarClient {
         String ret_string = new String(rPacket.getData(), 0,  // unpack packet
                 rPacket.getLength());
         System.out.println("Received from Server:" + ret_string);
-
-        // still need to output stuff to print ro output file
+        pwriter.println(ret_string);
 
     }
 }

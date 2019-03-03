@@ -22,6 +22,7 @@ public class CarClient {
 
         // Set up variables
         String commandFile = args[0];           // parse commands
+        System.out.println(commandFile);
         clientId = Integer.parseInt(args[1]);   // parse client id
         hostAddress = "localhost";              // localHost
         tcpPort = 7000;                         // hardcoded -- must match the server's tcp port
@@ -41,79 +42,133 @@ public class CarClient {
         // Initialize communication ports and reading set up
         try {
             Scanner sc = new Scanner(new FileReader(commandFile));  // Scanner of reading input
-            InetAddress IA = InetAddress.getByName(hostAddress);    // Establish Inet address
-            DatagramSocket dataSocket = new DatagramSocket();       // UDP protocol
-            Socket tcpSocket = new Socket(hostAddress, tcpPort);    // TCP protocol
 
             // Continues reading while scanner is open
-            while (sc.hasNextLine()) {
+            if (sc.hasNextLine()) {
 
                 String cmd = sc.nextLine();
                 String[] tokens = cmd.split(" ");
 
                 if (tokens[0].equals("setmode")) {
                     // set the mode of communication for sending commands to the server
-                    if(tokens[1].equals("U"))      protocol = "U";
-                    else if(tokens[1].equals("T")) protocol = "T";
-
-
-                } else if (tokens[0].equals("rent")) {
-                    // Inputs the name of customer, brand of car,
-                    // and color required for car rental
-                    if(protocol.equals("U"))
-                        UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
-                    else if(protocol.equals("T"))
-                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
-
-
-                } else if (tokens[0].equals("return")) {
-                    // Returns the car associated with the <record-id>
-                    if(protocol.equals("U"))
-                        UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
-                    else if(protocol.equals("T"))
-                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
-
-
-                } else if (tokens[0].equals("inventory")) {
-                    // Lists all available cars in the rental service
-                    if(protocol.equals("U"))
-                        UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
-                    else if(protocol.equals("T"))
-                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
-
-
-                } else if (tokens[0].equals("list")) {
-                    // Lists all cars borrowed by the customer along with their color
-                    if(protocol.equals("U"))
-                        UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
-                    else if(protocol.equals("T"))
-                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
-
-
-                } else if (tokens[0].equals("exit")) {
-                    // Informs server to stop processing commands from
-                    // this client and print the current state of the
-                    // inventory to inventory file named as “inventory.txt.”
-//                    PrintWriter exit_msg = new PrintWriter(tcpSocket.getOutputStream(), true);
-//                    exit_msg.println(cmd);
-//                    exit_msg.close();
-
-                    byte[] buffer = new byte[cmd.length()];
-                    buffer = cmd.getBytes();
-                    DatagramPacket sPacket = new DatagramPacket(buffer, cmd.length(), IA, udpPort);
-                    dataSocket.send(sPacket);
-                    dataSocket.close();
-                    sc.close();
-
-                    fwriter.close();
-                    pwriter.close();
-                    System.exit(0);
-                    break;
-
-                } else {
-                    System.out.println("ERROR: No such command");
+                   if(tokens[1].equals("T")) { 
+                    	protocol = "T";
+                    }
                 }
-            }
+                
+                if(protocol.equals("U")) {
+                    InetAddress IA = InetAddress.getByName(hostAddress);    // Establish Inet address
+                    DatagramSocket dataSocket = new DatagramSocket();       // UDP protocol
+                    while(sc.hasNextLine()) {
+                    	cmd = sc.nextLine();
+                        tokens = cmd.split(" ");
+                        if (tokens[0].equals("rent")) {
+                            // Inputs the name of customer, brand of car,
+                            // and color required for car rental
+                        	UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
+
+
+                        } else if (tokens[0].equals("return")) {
+                            // Returns the car associated with the <record-id>
+                            UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
+                           
+
+                        } else if (tokens[0].equals("inventory")) {
+                            // Lists all available cars in the rental service
+                            UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
+                            
+
+                        } else if (tokens[0].equals("list")) {
+                            // Lists all cars borrowed by the customer along with their color
+                           
+                                UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
+                    
+
+                        } else if (tokens[0].equals("exit")) {
+                            // Informs server to stop processing commands from
+                            // this client and print the current state of the
+                            // inventory to inventory file named as “inventory.txt.”
+//                            PrintWriter exit_msg = new PrintWriter(tcpSocket.getOutputStream(), true);
+//                            exit_msg.println(cmd);
+//                            exit_msg.close();
+
+                            byte[] buffer = new byte[cmd.length()];
+                            buffer = cmd.getBytes();
+                            DatagramPacket sPacket = new DatagramPacket(buffer, cmd.length(), IA, udpPort);
+                            dataSocket.send(sPacket);
+                            dataSocket.close();
+                            sc.close();
+
+                            break;
+
+                        } else {
+                            System.out.println("ERROR: No such command");
+                        }
+                    }
+                }
+            
+                        
+                    	
+                    
+                    
+                    
+                    
+                
+                else {
+                	Socket tcpSocket = new Socket(hostAddress, tcpPort);    // TCP protocol
+                	while(sc.hasNextLine()) {
+                    	cmd = sc.nextLine();
+                        tokens = cmd.split(" ");
+	                	if (tokens[0].equals("rent")) {
+	                        // Inputs the name of customer, brand of car,
+	                        // and color required for car rental
+	                       
+	                            TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+	
+	
+	                    } else if (tokens[0].equals("return")) {
+	                        // Returns the car associated with the <record-id>
+	                            TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+	
+	
+	                    } else if (tokens[0].equals("inventory")) {
+	                        // Lists all available cars in the rental service
+	                            TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+	
+	
+	                    } else if (tokens[0].equals("list")) {
+	                        // Lists all cars borrowed by the customer along with their color
+	                       
+	                            TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+	
+	
+	                    } else if (tokens[0].equals("exit")) {
+	                        // Informs server to stop processing commands from
+	                        // this client and print the current state of the
+	                        // inventory to inventory file named as “inventory.txt.”
+	//                        PrintWriter exit_msg = new PrintWriter(tcpSocket.getOutputStream(), true);
+	//                        exit_msg.println(cmd);
+	//                        exit_msg.close();
+	
+	                        fwriter.close();
+	                        pwriter.close();
+	                        System.exit(0);
+	                        break;
+	
+	                    } else {
+	                        System.out.println("ERROR: No such command");
+	                    }
+                	}
+                	
+                	
+                }
+                
+                
+            }         
+                
+                
+                
+            
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (UnknownHostException e) {

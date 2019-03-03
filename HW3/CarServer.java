@@ -2,6 +2,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.net.*;
 public class CarServer {
@@ -57,7 +58,7 @@ public class CarServer {
 				datapacket = new DatagramPacket(buf, buf.length);
 				datasocket.receive(datapacket);
 				byte[] recmsg = datapacket.getData();
-				System.out.println(recmsg[0]);
+				System.out.println(Arrays.toString(recmsg));
 				
 				
 				returnpacket = new DatagramPacket(
@@ -70,9 +71,6 @@ public class CarServer {
 		} catch (SocketException e) {
 			System.err.println(e);
 	    // TCP:
-	    
-	    
-	    
 	    
 	  } catch (IOException e) {
 			// TODO Auto-generated catch block

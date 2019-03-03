@@ -67,8 +67,6 @@ public class CarServer {
 				System.out.println("Input received: " + data);
 				String[] tokens = data.split(" ");
 
-				InetAddress ip = datapacket.getAddress();
-				int port = datapacket.getPort();
 
 				if (tokens[0].equals("rent")) {
 					System.out.println("Renting...");
@@ -79,13 +77,26 @@ public class CarServer {
 							'\n' + "Model: " + model +
 							'\n' + "Color: " + color);
 					int status = rentCar(name, model, color);  	// does the actually renting procedure
-					String outcome = "";
+					String outcome;
+
 					if(status == -1)							// renting failed
 						outcome = "transaction failed";
 					else										// renting succedded
 						outcome = "Success, " + status + " " + model + " " + color;
-					UDPMessage(ip, port, outcome, datasocket);
+					UDPMessage(datapacket.getAddress(), datapacket.getPort(), outcome, datasocket);
 				}
+
+                else if (tokens[0].equals("return")) {
+                    System.out.println("Return processing...");
+                    int id = Integer.parseInt(tokens[1].trim());    // Extract id
+                    String outcome;
+
+                    if(returnRental(id))                            // If rental id exists, update stock
+                        outcome = id + " is returned";
+                    else                                            // Else error
+                        outcome = id + " not found, no such rental record";
+                    UDPMessage(datapacket.getAddress(), datapacket.getPort(), outcome, datasocket);
+                }
 			}
 		} catch (SocketException e) {
 			System.err.println(e);
@@ -129,10 +140,11 @@ public class CarServer {
 		int inventory_num = searchStock(model, color);
 		if (inventory_num == -1)
 			return -1;  								// Car is not available
+
 		else{
 			record_count++;
-			String[] info = {name, model, color};
-			recordBook.put(record_count, info);         // Add checkout to record book
+			String[] log = {name, model, color};
+			recordBook.put(record_count, log);         // Add checkout to record book
 			// Add to student reading list
 			ArrayList<Integer> list;
 			if (!rentingList.containsKey(name))         // Create new entry if one doesn't exist
@@ -145,6 +157,42 @@ public class CarServer {
 			return record_count;
 		}
 	}
+
+    static int stockReplace(String model, String color){
+        for(int i=0; i<stock.size(); i++){
+            if(stock.get(i).name.equals(model) &&
+                    stock.get(i).color.equals(color)){
+                    stock.get(i).q++;
+                    return i;
+            }
+        }
+        return -1;
+    }
+
+    public static synchronized Boolean returnRental(int id) {
+        if(!recordBook.containsKey(id))             // If id doesn't exist, exit
+            return false;
+        else {
+            String[] log = recordBook.get(id);      // Grabs info regarding record id
+            String name = log[0];                   // Separate components
+            String model = log[1];
+            String color = log[2];
+            int status = stockReplace(model, color);// Add car back to inventory if found
+            if(status == -1)                        // if foreign to inventory, exit
+                return false;
+
+            ArrayList<Integer> record = rentingList.get(name);
+            if(record.size() == 1)                  // Remove from record list
+                rentingList.remove(name);
+            else{
+                record.remove(id);
+                rentingList.put(name, record);
+            }
+            return true;                            // Success
+
+        }
+
+    }
 
 }
 class inventory{

@@ -64,7 +64,7 @@ public class CarClient {
                     if(protocol.equals("U"))
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
                     else if(protocol.equals("T")){}
-//                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
 
                 } else if (tokens[0].equals("return")) {
@@ -74,7 +74,7 @@ public class CarClient {
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
                     }
                     else if(protocol.equals("T")){}
-//                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
 
                 } else if (tokens[0].equals("inventory")) {
@@ -90,7 +90,7 @@ public class CarClient {
                     if(protocol.equals("U"))
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
                     else if(protocol.equals("T")){}
-//                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+                        TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
 
                 } else if (tokens[0].equals("exit")) {

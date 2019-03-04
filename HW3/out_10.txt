@@ -1,1 +1,5 @@
-"Ford" "Blue" 6
+Success, 1 "Ford" "Blue"
+transaction failed
+Success, 2 "Tesla" "Silver"
+Lucy "Tesla" "Silver"
+1 is returned

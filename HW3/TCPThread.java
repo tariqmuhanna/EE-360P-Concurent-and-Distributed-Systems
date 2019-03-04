@@ -7,8 +7,6 @@ public class TCPThread extends Thread{
 	static HashMap<Integer, String[]> recordBook;
 	private static List<inventory> stock;
 
-	
-	
 	public TCPThread(int count, HashMap list, HashMap book, List stock) {
 		record_count = count;
 		rentingList = list;

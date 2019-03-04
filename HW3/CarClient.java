@@ -70,7 +70,6 @@ public class CarClient {
                 } else if (tokens[0].equals("return")) {
                     // Returns the car associated with the <record-id>
                     if(protocol.equals("U")) {
-                        System.out.println(cmd);
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
                     }
                     else if(protocol.equals("T")){}

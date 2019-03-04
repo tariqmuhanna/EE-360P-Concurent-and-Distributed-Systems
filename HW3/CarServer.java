@@ -13,9 +13,44 @@ public class CarServer {
 	private static List<inventory> stock =  Collections.synchronizedList(new ArrayList<inventory>());
 
 	public static void main (String[] args) {
-		UDPThread udpMain = new UDPThread(record_count, rentingList, recordBook, stock, args);
-		udpMain.start();
 		
+		if (args.length != 1) {
+			System.out.println("ERROR: Provide 1 argument: input file containing initial inventory");
+			System.exit(-1);
+		}
+		String fileName = args[0];
+		Scanner sc;
+		try {
+			sc = new Scanner(new FileReader(fileName));
+			while(sc.hasNextLine()) {
+				String nxtLine = sc.nextLine();
+				String[] descrip = nxtLine.split(" ");
+				if(descrip.length != 3) throw new Exception();
+				inventory newInv = new inventory(descrip[0], descrip[1], Integer.parseInt(descrip[2]));
+				stock.add(newInv);
+
+			}
+
+			sc.close();
+
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("Bad input");
+			e.printStackTrace();
+		}
+
+		for(inventory i : stock) {
+			System.out.println(i.name);
+		}
+		
+		UDPThread udpMain = new UDPThread(record_count, rentingList, recordBook, stock);
+		udpMain.start();
+		TCPThread tcpMain = new TCPThread(record_count, rentingList, recordBook, stock);
+		tcpMain.start();
 	}
 	
 	

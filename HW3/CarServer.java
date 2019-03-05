@@ -59,7 +59,7 @@ public class CarServer {
 		for(inventory x: stock) {
 			
 			outcome += x.name + " " + x.color + " " + x.q;
-			outcome += System.lineSeparator();
+			outcome += System.getProperty("line.separator");
 			
 			
 		}

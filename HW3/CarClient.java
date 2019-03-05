@@ -137,9 +137,13 @@ public class CarClient {
 
         BufferedReader in = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream())); // to read from server
         String server_in;
-        if ((server_in = in.readLine().trim()) != null) {   // printing ack
+        while ((server_in = in.readLine().trim()) != null) {   // printing ack
+        	if (server_in.isEmpty()) {
+                break;
+            }
             System.out.println(server_in);
             pwriter.println(server_in);
+            
         }
     }
 

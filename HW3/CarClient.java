@@ -64,7 +64,7 @@ public class CarClient {
                     // and color required for car rental
                     if(protocol.equals("U"))
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
-                    else if(protocol.equals("T")){}
+                    else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
 
@@ -73,7 +73,7 @@ public class CarClient {
                     if(protocol.equals("U")) {
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
                     }
-                    else if(protocol.equals("T")){}
+                    else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
 
@@ -81,7 +81,7 @@ public class CarClient {
                     // Lists all available cars in the rental service
                     if(protocol.equals("U"))
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
-                    else if(protocol.equals("T")){}
+                    else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
 
@@ -89,7 +89,7 @@ public class CarClient {
                     // Lists all cars borrowed by the customer along with their color
                     if(protocol.equals("U"))
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
-                    else if(protocol.equals("T")){}
+                    else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
 
 

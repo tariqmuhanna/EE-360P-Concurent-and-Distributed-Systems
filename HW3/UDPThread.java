@@ -102,7 +102,6 @@ public class UDPThread extends Thread {
                 	pwriter.write(CarServer.invState());
                 	pwriter.close();
                 	fwriter.close();
-                	
                 }
 			}
 		} catch (IOException e) {

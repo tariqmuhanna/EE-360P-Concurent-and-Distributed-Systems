@@ -2,6 +2,7 @@ import java.util.Scanner;
 
 
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.util.*;
 public class CarClient {
@@ -129,7 +130,9 @@ public class CarClient {
 
     // Compose and receive TCP protocol type messages
     private static void TCPMessage(String input, Socket tcpSocket, int port, PrintWriter pwriter, int len) throws IOException {
-        PrintWriter out = new PrintWriter(tcpSocket.getOutputStream(), true); // to send out to server
+        PrintWriter out = new PrintWriter(new OutputStreamWriter(
+        	    tcpSocket.getOutputStream(), StandardCharsets.US_ASCII), true); // to send out to server
+        
         out.println(input);
 
         BufferedReader in = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream())); // to read from server
@@ -145,7 +148,7 @@ public class CarClient {
     public static void UDPMessage(String input, DatagramSocket datasocket, InetAddress ia, int port, PrintWriter pwriter, int buff_length) throws IOException {
         byte[] buffer = new byte[input.length()];
         byte[] rbuffer = new byte[buff_length];
-        buffer = input.getBytes();
+        buffer = input.getBytes(StandardCharsets.US_ASCII);
         DatagramPacket sPacket = new DatagramPacket(buffer,         // Create sending packet
                 buffer.length, ia, port);
         datasocket.send(sPacket);                                   // Send packet

@@ -54,7 +54,7 @@ public class UDPThread extends Thread {
 
 					if(status == -1)							// renting failed
 						outcome = "transaction failed";
-					else										// renting succedded
+					else										// renting succeeded
 						outcome = "Success, " + status + " " + model + " " + color;
 					System.out.println(CarServer.invState());
 					UDPMessage(datapacket.getAddress(), datapacket.getPort(), outcome, datasocket);

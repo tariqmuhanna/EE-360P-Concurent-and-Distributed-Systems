@@ -1,6 +1,6 @@
 import java.util.Scanner;
-
-
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.io.*;
@@ -66,6 +66,7 @@ public class CarClient {
                         UDPMessage(cmd,dataSocket,IA,udpPort,pwriter,len);
                     else if(protocol.equals("T"))
                         TCPMessage(cmd,tcpSocket,tcpPort,pwriter,len);
+                    int i = 0;
 
 
                 } else if (tokens[0].equals("return")) {
@@ -135,16 +136,45 @@ public class CarClient {
         
         out.println(input);
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream())); // to read from server
-        String server_in;
-        while ((server_in = in.readLine().trim()) != null) {   // printing ack
-        	if (server_in.isEmpty()) {
-                break;
-            }
-            System.out.println(server_in);
-            pwriter.println(server_in);
-            
+        BufferedReader in = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream(),
+        		StandardCharsets.US_ASCII)); // to read from server
+        
+//        Stream<String> strStream = in.lines();
+//        Iterator<String> it = strStream.iterator();
+//        String o = "";
+//        while(it.hasNext()) {
+//        	System.out.println("has next");
+//        	String temp = it.next().trim();
+//        	System.out.println(temp);
+//        	if(temp.equals("")) break;
+//        	o += temp;
+//            System.out.println(o);
+//        	o += System.getProperty("line.separator");
+//            System.out.println(o);
+//        	
+//        }
+//        System.out.println(o);
+//        pwriter.println(o);
+//        String server_in = in.readLine();
+//      
+//        if (server_in != null) {   // printing ack
+//        	
+//            System.out.println(server_in);
+//            pwriter.println(server_in);
+//        }
+        
+        char[] cbuf = new char[1024];
+        String output = "";
+        in.read(cbuf);
+        for(int i = 0; i < cbuf.length; i++) {
+        	if(cbuf[i] != '\0')
+        		output += cbuf[i];
+        	else
+        		break;
+        	
         }
+        System.out.println(output);
+        pwriter.println(output);
     }
 
 

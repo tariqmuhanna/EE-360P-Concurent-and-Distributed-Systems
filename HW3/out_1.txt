@@ -1,9 +1,15 @@
-Your request has been approved, 1 Mike "Ford" "Blue"
+No record found for tJack
 Request Failed - We do not have this car
-Your request has been approved, 2 Lucy "Tesla" "Silver"
-2 "Tesla" "Silver"
-1 is returned
-"Ford" "Blue" 6
-"Lexus" "Red" 3
-"Toyota" "Yellow" 10
-"Tesla" "Silver" 15
+3 "Toyota" "green"
+Your request has been approved, 5 tJack "Lexus" "black"
+Your request has been approved, 6 tMike "Toyota" "green"
+Your request has been approved, 7 tLucy "Toyota" "blue"
+2 "Lexus" "black"
+5 "Lexus" "black"
+7 "Toyota" "blue"
+4 not found, no such rental record
+"Toyota" "blue" 0
+"Toyota" "green" 1
+"Lexus" "black" 8
+"Ford" "white" 7
+

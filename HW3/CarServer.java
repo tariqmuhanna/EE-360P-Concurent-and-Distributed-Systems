@@ -135,7 +135,7 @@ public class CarServer {
 	            recordBook.remove(id);
 	        }
 	        else if(record != null && record.size() > 1){
-	            record.remove(id);
+	        	record.removeIf(n -> n == id);
 	            rentingList.put(name, record);
 	        }
 	        return true;                            // Success

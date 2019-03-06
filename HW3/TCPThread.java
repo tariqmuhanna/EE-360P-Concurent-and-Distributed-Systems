@@ -21,7 +21,6 @@ public class TCPThread extends Thread{
 			ServerSocket listener = new ServerSocket(tcpPort);
 			Socket s;
 			while ( (s = listener.accept()) != null) {
-				System.out.println("accepted");
 				Thread t = new TCPServerThreads(s, record_count, rentingList, recordBook, stock);
 				//t is a new client that has setmode = T
 				t.start();

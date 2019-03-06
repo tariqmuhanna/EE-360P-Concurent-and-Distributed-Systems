@@ -48,7 +48,8 @@ public class CarClient {
             
             
             // Continues reading while scanner is open
-            while (sc.hasNextLine()) {
+            boolean exit = true;
+            while (exit && sc.hasNextLine()) {
 
                 String cmd = sc.nextLine();
                 String[] tokens = cmd.split(" ");
@@ -111,7 +112,7 @@ public class CarClient {
 
                     fwriter.close();
                     pwriter.close();
-                    System.exit(0);
+                    exit = false;
                     break;
 
                 } else {
@@ -160,6 +161,7 @@ public class CarClient {
 //        if (server_in != null) {   // printing ack
 //        	
 //            System.out.println(server_in);
+        
 //            pwriter.println(server_in);
 //        }
         
@@ -173,7 +175,6 @@ public class CarClient {
         		break;
         	
         }
-        System.out.println(output);
         pwriter.println(output);
     }
 
@@ -191,7 +192,6 @@ public class CarClient {
         datasocket.receive(rPacket);
         String ret_string = new String(rPacket.getData(), 0,  // unpack packet
                 rPacket.getLength());
-        System.out.println("Received from Server:" + ret_string);
         pwriter.println(ret_string);
 
     }

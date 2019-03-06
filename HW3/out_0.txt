@@ -1,1 +1,16 @@
-Success, 1 "Ford" "Blue"
+No record found for Mike
+No record found for Jack
+No record found for Lucy
+Request Failed - We do not have this car
+Request Failed - Car not available
+Request Failed - Car not available
+1 "Lexus" "black"
+2 "Toyota" "blue"
+3 "Lexus" "black"
+No record found for Lucy
+1 is returned
+"Toyota" "blue" 0
+"Toyota" "green" 3
+"Lexus" "black" 10
+"Ford" "white" 7
+

@@ -6,3 +6,5 @@
 /TCPThread.class
 /TCPServerThreads.class
 /ClientTester.class
+/testMultiThread.class
+/ClientTester$testMultiThread.class

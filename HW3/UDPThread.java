@@ -1,4 +1,5 @@
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.util.*;
 public class UDPThread extends Thread {
@@ -29,6 +30,7 @@ public class UDPThread extends Thread {
 			DatagramSocket datasocket = new DatagramSocket(udpPort);
 			byte[] buf = new byte[len];
 			DatagramPacket datapacket = new DatagramPacket(buf, buf.length);
+			
 			while (true) {
 				buf = new byte[len];
 				datapacket.setData(buf);
@@ -37,31 +39,25 @@ public class UDPThread extends Thread {
 //				byte[] recmsg = datapacket.getData();
 //				System.out.println(recmsg[0]);
 				String data = new String(datapacket.getData());
-				System.out.println("Input received: " + data);
 				String[] tokens = data.split(" ");
-				System.out.println(Arrays.toString(tokens));
 				tokens[0] = tokens[0].trim();
 				if (tokens[0].equals("rent")) {
-					System.out.println("Renting...");
 					String name = tokens[1].trim();				// trims extra spaces
 					String model = tokens[2].trim();
 					String color = tokens[3].trim();
-					System.out.println("Name: " + name +
-							'\n' + "Model: " + model +
-							'\n' + "Color: " + color);
 					int status = CarServer.rentCar(name, model, color);  	// does the actually renting procedure
 					String outcome;
 
 					if(status == -1)							// renting failed
-						outcome = "transaction failed";
-					else										// renting succeeded
-						outcome = "Success, " + status + " " + model + " " + color;
-					System.out.println(CarServer.invState());
+						outcome = "Request Failed - We do not have this car";
+					else if(status == -2)
+						outcome = "Request Failed - Car not available";
+					else										// renting succedded
+						outcome = "Your request has been approved, " + status + " " + name + " " + model + " " + color;
 					UDPMessage(datapacket.getAddress(), datapacket.getPort(), outcome, datasocket);
 				}
 
                 else if (tokens[0].equals("return")) {
-                    System.out.println("Return processing...");
                     int id = Integer.parseInt(tokens[1].trim());    // Extract id
                     String outcome;
 
@@ -69,18 +65,20 @@ public class UDPThread extends Thread {
                         outcome = id + " is returned";
                     else                                            // Else error
                         outcome = id + " not found, no such rental record";
-					System.out.println(CarServer.invState());
                     UDPMessage(datapacket.getAddress(), datapacket.getPort(), outcome, datasocket);
                     
                 }else if (tokens[0].equals("list")) {
-            		String outcome = "";
-                	if(rentingList.get(tokens[1]) != null) {
-                		ArrayList<Integer> ids = rentingList.get(tokens[1]);
+                	String outcome = "";
+            		int addSep = 0;
+                	if(rentingList.get(tokens[1].trim()) != null) {
+                		ArrayList<Integer> ids = rentingList.get(tokens[1].trim());
                 		for(Integer i: ids) {
+                			if(addSep != 0)
+                				outcome += System.getProperty("line.separator");
                     		String[] log = recordBook.get(i);	//is a log;
-                    		System.out.println(Arrays.toString(log));
-                    		outcome += log[0] + " " + log[1] + " " + log[2];
-                    		outcome += System.lineSeparator();
+                    		//System.out.println(Arrays.toString(log));
+                    		outcome += i + " " + log[1] + " " + log[2];
+                    		addSep++;
                 		}
                 		
                 	}
@@ -96,7 +94,6 @@ public class UDPThread extends Thread {
                 	UDPMessage(datapacket.getAddress(), datapacket.getPort(), outcome, datasocket);
                 	
                 }else{
-                	System.out.println(CarServer.invState());
                 	FileWriter fwriter = new FileWriter(new File("inventory.txt"));
                     PrintWriter pwriter = new PrintWriter(fwriter, true);
                 	pwriter.write(CarServer.invState());
@@ -111,8 +108,8 @@ public class UDPThread extends Thread {
 }
 
 	private static void UDPMessage(InetAddress ia, int port, String outcome, DatagramSocket dataSocket) {
-		System.out.println("Sending response: " + outcome);
-		byte[] sendData = outcome.getBytes();
+		//System.out.println("Sending response: " + outcome);
+		byte[] sendData = outcome.getBytes(StandardCharsets.US_ASCII);
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ia, port);
 		try {
 			dataSocket.send(sendPacket);

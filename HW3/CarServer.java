@@ -43,9 +43,6 @@ public class CarServer {
 			e.printStackTrace();
 		}
 
-		for(inventory i : stock) {
-			System.out.println(i.name);
-		}
 		
 		UDPThread udpMain = new UDPThread(record_count, rentingList, recordBook, stock);
 		udpMain.start();
@@ -72,6 +69,8 @@ public class CarServer {
 		for(int i=0; i<stock.size(); i++){
 			if(stock.get(i).name.equals(model) &&
 					stock.get(i).color.equals(color)){
+				if (stock.get(i).q == 0)
+					return -2;
 				if (stock.get(i).q > 0){
 					stock.get(i).q--;
 					return i;
@@ -81,11 +80,13 @@ public class CarServer {
 		return -1;
 	}
 
-	public static synchronized int rentCar(String name, String model, String color) {
+	public static synchronized int rentCar(String nameO, String model, String color) {
+		String name = nameO.trim();
 		int inventory_num = searchStock(model, color);
 		if (inventory_num == -1)
 			return -1;  								// Car is not available
-
+		if(inventory_num == -2)
+			return -2;
 		else{
 			record_count++;
 			String[] log = {name, model, color};
@@ -120,17 +121,20 @@ public class CarServer {
 	        return false;
 	    else {
 	        String[] log = recordBook.get(id);      // Grabs info regarding record id
-	        String name = log[0];                   // Separate components
-	        String model = log[1];
-	        String color = log[2];
+	        String name = log[0].trim();                   // Separate components
+	        String model = log[1].trim();
+	        String color = log[2].trim();
+	        System.out.println("returning"+Arrays.toString(log));
 	        int status = stockReplace(model, color);// Add car back to inventory if found
 	        if(status == -1)                        // if foreign to inventory, exit
 	            return false;
-
 	        ArrayList<Integer> record = rentingList.get(name);
-	        if(record.size() == 1)                  // Remove from record list
+	        System.out.println("returning: " + name + id);
+	        if(record != null && record.size() == 1) {                  // Remove from record list
 	            rentingList.remove(name);
-	        else{
+	            recordBook.remove(id);
+	        }
+	        else if(record != null && record.size() > 1){
 	            record.remove(id);
 	            rentingList.put(name, record);
 	        }

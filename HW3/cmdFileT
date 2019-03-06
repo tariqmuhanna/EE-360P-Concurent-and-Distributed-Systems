@@ -1,0 +1,12 @@
+setmode T
+list Jack
+rent Jack "Ford" "blue"
+list Mike
+rent Jack "Lexus" "black"
+rent Mike "Toyota" "green"
+rent Lucy "Toyota" "blue"
+list Jack
+list Lucy
+return 4
+inventory
+exit

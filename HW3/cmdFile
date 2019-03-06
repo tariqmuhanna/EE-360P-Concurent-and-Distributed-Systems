@@ -1,12 +1,8 @@
 setmode U
-list uMike
-list uJack
-list uLucy
-rent uMike "Ford" "black"
-rent uJack "Toyota" "blue"
-rent uLucy "Toyota" "blue"
-list uJack
-list uLucy
-return 1
+list mt
+rent mt "Ford" "white"
+rent mt "Lexus" "black"
+list mt
+return 3
 inventory
 exit

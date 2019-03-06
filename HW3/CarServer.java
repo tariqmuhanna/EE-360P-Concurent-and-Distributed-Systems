@@ -132,10 +132,10 @@ public class CarServer {
 	        System.out.println("returning: " + name + id);
 	        if(record != null && record.size() == 1) {                  // Remove from record list
 	            rentingList.remove(name);
-	            recordBook.remove(id);
+	            recordBook.keySet().removeIf(n -> n == id);
 	        }
 	        else if(record != null && record.size() > 1){
-	        	record.removeIf(n -> n == id);
+	        	record.removeIf(n -> (n == id));
 	            rentingList.put(name, record);
 	        }
 	        return true;                            // Success

@@ -35,10 +35,10 @@ class testMultiThread extends Thread{
 		try {
 			String[] args = new String[2];
 			if(i % 2 == 0) {
-				args[0]="cmdFile";
+				args[0]="src/cmdFile";
 			}
 			else
-				args[0]="cmdFileT";
+				args[0]="src/cmdFileT";
 			args[1] = String.valueOf(i);
 				
 			x = new CarClient();

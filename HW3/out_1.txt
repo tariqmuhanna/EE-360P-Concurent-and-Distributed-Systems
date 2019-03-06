@@ -1,10 +1,9 @@
-No record found for Jack
+Your request has been approved, 1 Mike "Ford" "Blue"
 Request Failed - We do not have this car
-No record found for Mike
-Your request has been approved, 1 Jack "Lexus" "black"
-Your request has been approved, 4 Mike "Toyota" "green"
-Request Failed - Car not available
-1 "Lexus" "black"
-2 "Toyota" "blue"
-3 "Lexus" "black"
-No record found for Lucy
+Your request has been approved, 2 Lucy "Tesla" "Silver"
+2 "Tesla" "Silver"
+1 is returned
+"Ford" "Blue" 6
+"Lexus" "Red" 3
+"Toyota" "Yellow" 10
+"Tesla" "Silver" 15

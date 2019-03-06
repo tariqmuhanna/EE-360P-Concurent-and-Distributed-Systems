@@ -1,12 +1,12 @@
 setmode T
-list Jack
-rent Jack "Ford" "blue"
-list Mike
-rent Jack "Lexus" "black"
-rent Mike "Toyota" "green"
-rent Lucy "Toyota" "blue"
-list Jack
-list Lucy
+list tJack
+rent tJack "Ford" "blue"
+list tMike
+rent tJack "Lexus" "black"
+rent tMike "Toyota" "green"
+rent tLucy "Toyota" "blue"
+list tJack
+list tLucy
 return 4
 inventory
 exit

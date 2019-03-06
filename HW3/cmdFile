@@ -1,8 +1,9 @@
 setmode U
-list mt
-rent mt "Ford" "white"
-rent mt "Lexus" "black"
-list mt
+inventory
+list urent
+rent urent "Ford" "white"
+rent urent "Lexus" "black"
+list urent
 return 3
 inventory
 exit

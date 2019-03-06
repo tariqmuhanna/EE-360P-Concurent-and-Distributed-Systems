@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 
 public class ClientTester {
 	public static void main(String[] args) {
-		int len = 4;
+		int len = 6;
 		Thread[] toruns = new testMultiThread[len];
 		for(int i = 0; i < len/2; i++) {
 			toruns[i] = new testMultiThread(i);

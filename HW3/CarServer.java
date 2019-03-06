@@ -112,6 +112,7 @@ public class CarServer {
 	                return i;
 	        }
 	    }
+	    
 	    return -1;
 	}
 
@@ -124,17 +125,17 @@ public class CarServer {
 	        String name = log[0].trim();                   // Separate components
 	        String model = log[1].trim();
 	        String color = log[2].trim();
-	        System.out.println("returning"+Arrays.toString(log));
+	       
 	        int status = stockReplace(model, color);// Add car back to inventory if found
 	        if(status == -1)                        // if foreign to inventory, exit
 	            return false;
 	        ArrayList<Integer> record = rentingList.get(name);
-	        System.out.println("returning: " + name + id);
 	        if(record != null && record.size() == 1) {                  // Remove from record list
 	            rentingList.remove(name);
 	            recordBook.keySet().removeIf(n -> n == id);
 	        }
 	        else if(record != null && record.size() > 1){
+	            recordBook.keySet().removeIf(n -> n == id);
 	        	record.removeIf(n -> (n == id));
 	            rentingList.put(name, record);
 	        }

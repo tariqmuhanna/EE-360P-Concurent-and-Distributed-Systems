@@ -32,6 +32,7 @@ public class CarClient {
 //        DatagramPacket sPacket, rPacket;
 
         // Setup output file actions
+
         String fileName   = "out_" + clientId + ".txt";
         String fileOutput = "";
         File outputFile = new File(fileName);
@@ -45,7 +46,6 @@ public class CarClient {
             InetAddress IA = InetAddress.getByName(hostAddress);    // Establish Inet address
             DatagramSocket dataSocket = new DatagramSocket();       // UDP protocol
             Socket tcpSocket = new Socket(hostAddress, tcpPort);    // TCP protocol
-            
             
             // Continues reading while scanner is open
             boolean exit = true;
@@ -133,12 +133,12 @@ public class CarClient {
     // Compose and receive TCP protocol type messages
     private static void TCPMessage(String input, Socket tcpSocket, int port, PrintWriter pwriter, int len) throws IOException {
         PrintWriter out = new PrintWriter(new OutputStreamWriter(
-        	    tcpSocket.getOutputStream(), StandardCharsets.US_ASCII), true); // to send out to server
+        	    tcpSocket.getOutputStream(), StandardCharsets.UTF_8), true); // to send out to server
         
         out.println(input);
 
         BufferedReader in = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream(),
-        		StandardCharsets.US_ASCII)); // to read from server
+        		StandardCharsets.UTF_8)); // to read from server
         
 //        Stream<String> strStream = in.lines();
 //        Iterator<String> it = strStream.iterator();
@@ -183,7 +183,7 @@ public class CarClient {
     public static void UDPMessage(String input, DatagramSocket datasocket, InetAddress ia, int port, PrintWriter pwriter, int buff_length) throws IOException {
         byte[] buffer = new byte[input.length()];
         byte[] rbuffer = new byte[buff_length];
-        buffer = input.getBytes(StandardCharsets.US_ASCII);
+        buffer = input.getBytes(StandardCharsets.UTF_8);
         DatagramPacket sPacket = new DatagramPacket(buffer,         // Create sending packet
                 buffer.length, ia, port);
         datasocket.send(sPacket);                                   // Send packet

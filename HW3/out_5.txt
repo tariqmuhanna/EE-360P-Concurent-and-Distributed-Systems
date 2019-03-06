@@ -1,12 +1,12 @@
 No record found for trent
 Request Failed - We do not have this car
 No record found for trent
-Your request has been approved, 5 trent "Lexus" "black"
-Your request has been approved, 9 trent "Toyota" "green"
-Your request has been approved, 13 Lucy "Toyota" "blue"
+Your request has been approved, 6 trent "Lexus" "black"
+Your request has been approved, 10 trent "Toyota" "green"
+Request Failed - Car not available
 No record found for tJack
 No record found for tLucy
-4 not found, no such rental record
+4 is returned
 "Toyota" "blue" 0
 "Toyota" "green" 0
 "Lexus" "black" 6

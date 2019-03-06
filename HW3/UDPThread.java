@@ -109,7 +109,7 @@ public class UDPThread extends Thread {
 
 	private static void UDPMessage(InetAddress ia, int port, String outcome, DatagramSocket dataSocket) {
 		//System.out.println("Sending response: " + outcome);
-		byte[] sendData = outcome.getBytes(StandardCharsets.US_ASCII);
+		byte[] sendData = outcome.getBytes(StandardCharsets.UTF_8);
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ia, port);
 		try {
 			dataSocket.send(sendPacket);

@@ -1,0 +1,22 @@
+"Toyota" "blue" 1
+"Toyota" "green" 3
+"Lexus" "black" 10
+"Ford" "white" 7
+
+1 "Ford" "white"
+2 "Ford" "white"
+3 "Lexus" "black"
+4 "Lexus" "black"
+Your request has been approved, 8 urent "Ford" "white"
+Your request has been approved, 12 urent "Lexus" "black"
+1 "Ford" "white"
+2 "Ford" "white"
+4 "Lexus" "black"
+8 "Ford" "white"
+12 "Lexus" "black"
+3 not found, no such rental record
+"Toyota" "blue" 0
+"Toyota" "green" 0
+"Lexus" "black" 6
+"Ford" "white" 4
+

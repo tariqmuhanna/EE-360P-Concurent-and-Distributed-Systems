@@ -1,14 +1,14 @@
-No record found for tJack
+No record found for trent
 Request Failed - We do not have this car
-No record found for tMike
-Your request has been approved, 2 tJack "Lexus" "black"
-Your request has been approved, 3 tMike "Toyota" "green"
-Your request has been approved, 4 tLucy "Toyota" "blue"
-2 "Lexus" "black"
-4 "Toyota" "blue"
-4 is returned
-"Toyota" "blue" 1
-"Toyota" "green" 2
-"Lexus" "black" 9
-"Ford" "white" 7
+No record found for trent
+Your request has been approved, 7 trent "Lexus" "black"
+Your request has been approved, 11 trent "Toyota" "green"
+Request Failed - Car not available
+No record found for tJack
+No record found for tLucy
+4 not found, no such rental record
+"Toyota" "blue" 0
+"Toyota" "green" 0
+"Lexus" "black" 6
+"Ford" "white" 4
 

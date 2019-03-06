@@ -1,10 +1,10 @@
 setmode T
-list tJack
-rent tJack "Ford" "blue"
-list tMike
-rent tJack "Lexus" "black"
-rent tMike "Toyota" "green"
-rent tLucy "Toyota" "blue"
+list trent
+rent trent "Ford" "blue"
+list trent
+rent trent "Lexus" "black"
+rent trent "Toyota" "green"
+rent Lucy "Toyota" "blue"
 list tJack
 list tLucy
 return 4

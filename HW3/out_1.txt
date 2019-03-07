@@ -12,3 +12,42 @@ No record found for tLucy
 "Lexus" "black" 6
 "Ford" "white" 4
 
+No record found for trent
+Request Failed - We do not have this car
+No record found for trent
+Your request has been approved, 7 trent "Lexus" "black"
+Your request has been approved, 10 trent "Toyota" "green"
+Your request has been approved, 13 Lucy "Toyota" "blue"
+No record found for tJack
+No record found for tLucy
+4 is returned
+"Toyota" "blue" 0
+"Toyota" "green" 0
+"Lexus" "black" 6
+"Ford" "white" 
+No record found for trent
+Request Failed - We do not have this car
+No record found for trent
+Your request has been approved, 9 trent "Lexus" "black"
+Your request has been approved, 13 trent "Toyota" "green"
+Request Failed - Car not available
+No record found for tJack
+No record found for tLucy
+4 not found, no such rental record
+"Toyota" "blue" 0
+"Toyota" "green" 0
+"Lexus" "black" 6
+"Ford" "white" 
+No record found for trent
+Request Failed - We do not have this car
+No record found for trent
+Your request has been approved, 8 trent "Lexus" "black"
+Your request has been approved, 9 trent "Toyota" "green"
+Your request has been approved, 13 Lucy "Toyota" "blue"
+No record found for tJack
+No record found for tLucy
+4 not found, no such rental record
+"Toyota" "blue" 0
+"Toyota" "green" 0
+"Lexus" "black" 6
+"Ford" "white" 4

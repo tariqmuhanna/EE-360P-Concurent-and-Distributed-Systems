@@ -53,14 +53,16 @@ public class CarServer {
 	
 	public static String invState() {
 		String outcome = "";
+		int size = stock.size();
 		for(inventory x: stock) {
 			
 			outcome += x.name + " " + x.color + " " + x.q;
-			outcome += System.getProperty("line.separator");
+			if(size > 1)
+				outcome += System.getProperty("line.separator");
 			
-			
+			size--;
 		}
-		outcome = outcome.substring(0, outcome.length()-2);
+		
 		return outcome;
 	}
 	

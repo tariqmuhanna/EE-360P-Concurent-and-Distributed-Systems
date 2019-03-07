@@ -36,7 +36,7 @@ public class CarClient {
         String fileName   = "out_" + clientId + ".txt";
         String fileOutput = "";
         File outputFile = new File(fileName);
-        FileWriter fwriter = new FileWriter(outputFile);
+        FileWriter fwriter = new FileWriter(outputFile,true);
         PrintWriter pwriter = new PrintWriter(fwriter, true);
 
 

@@ -60,6 +60,7 @@ public class CarServer {
 			
 			
 		}
+		outcome = outcome.substring(0, outcome.length()-2);
 		return outcome;
 	}
 	

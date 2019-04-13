@@ -4,9 +4,12 @@ import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static sun.tools.jstat.Alignment.keySet;
 
 /**
  * This class is the main class you need to implement paxos instances.
@@ -262,6 +265,8 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Done(int seq) {
         // Your code here
+        if(seq > this.done_list.get(this.me))
+            this.done_list.set(this.me, seq);   // Update done list
     }
 
 
@@ -272,6 +277,12 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Max(){
         // Your code here
+        int max = Integer.MIN_VALUE;                    // Set to minimum
+        Set<Integer> key_list = instance_map.keySet();  // List of keys
+        for(int key : key_list)
+            if(key > max)
+                max = key;                              // Update max
+        return max;
     }
 
     /**
@@ -319,6 +330,20 @@ public class Paxos implements PaxosRMI, Runnable{
     public retStatus Status(int seq){
         // Your code here
 
+        // If less than min, then msgs are forgotten
+        if(seq < this.Min())
+            return new retStatus(State.Forgotten, null);
+
+        // If instances exists, return status
+        else if (this.instance_map.containsKey(seq)){   // Check if instance exists
+            Instance instance = instance_map.get(seq);  // If exists, send ret status
+            return new retStatus(instance.state, instance.value);
+        }
+
+        // If instance doesn't exist, return null
+        else{
+            return new retStatus(State.Pending, null);
+        }
     }
 
     /**

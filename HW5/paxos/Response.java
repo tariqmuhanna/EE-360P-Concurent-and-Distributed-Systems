@@ -8,6 +8,7 @@ import java.io.Serializable;
  */
 public class Response implements Serializable {
     static final long serialVersionUID=2L;
+    public boolean accept_accepted;
     // your data here
 
     int proposal_num;
@@ -17,4 +18,17 @@ public class Response implements Serializable {
     Object value;
 
     // Your constructor and methods here
+    public Response() {
+        this.sequence_number = -2;
+        this.proposal_num = Integer.MIN_VALUE;
+        this.value = null;
+        this.proposal_accepted = false;
+        this.accept_accepted = false;
+    }
+
+    public Response(int seq, int num, Object val) {
+        this.sequence_number = seq;
+        this.proposal_num = num;
+        this.value = val;
+    }
 }

@@ -10,8 +10,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static com.sun.tools.doclint.Entity.mu;
-import static sun.tools.jstat.Alignment.keySet;
+//import static com.sun.tools.doclint.Entity.mu;
+//import static sun.tools.jstat.Alignment.keySet;
 
 /**
  * This class is the main class you need to implement paxos instances.
@@ -81,7 +81,17 @@ public class Paxos implements PaxosRMI, Runnable{
 
         mutex.unlock();
         return instance_map.get(sequence_number);
+    }
 
+    private Instance getInstance2(int sequence_number) {
+        if(!instance_map.containsKey(sequence_number)) {    // Check if contains key
+            Instance instance = new Instance();             // Make new instance if not
+            instance.highest_accepted = -1;
+            instance.highest_proposal = -1;
+            instance.value = null;
+            instance_map.put(sequence_number, instance);
+        }
+        return instance_map.get(sequence_number);
     }
 
     /**
@@ -222,6 +232,10 @@ public class Paxos implements PaxosRMI, Runnable{
                         this.me+1 : (instance.highest_proposal / this.peers.length+1) * this.peers.length + this.me+1;
     }
 
+    int generateProposalNumber2() {
+        return Max()*100 + this.me;
+    }
+
     @Override
     public void run(){      // PROPOSER
         // while not decided, loop
@@ -229,26 +243,31 @@ public class Paxos implements PaxosRMI, Runnable{
 
         //*****PREPARE PHASE*****
             // Makes unique proposal number
-            int n = generateProposalNumber(this.getInstance(this.sequence_number));
+            //int n = generateProposalNumber(this.getInstance(this.sequence_number));
+            //int n = generateProposalNumber2();
             //int n = this.me+1;
-            if (this.sequence_number == 6)
-                System.out.println("6 start prepare");
+            mutex.lock();
+            int n = (this.max_seq_seen + this.sequence_number + this.me*this.sequence_number);
+            System.out.println("seq=" + this.sequence_number + " n=" + n + " max=" + this.max_seq_seen + " me=" +this.me +'\n');
+            this.updateMaxSeqSeen(n);
+            mutex.unlock();
+            if (this.sequence_number == 7)
+                System.out.println("7 before prepare");
             Response proposalResponse = sendPrepareToAll(this.sequence_number, n, this.value);
-            if (this.sequence_number == 6)
-                System.out.println("6 finish prepare");
-            //*****ACCEPTOR PHASE*****
 
+
+            //*****ACCEPTOR PHASE*****
             // If majority acquired, then begin making and sending accept request
             if (proposalResponse != null && proposalResponse.majority){
                 Object v = proposalResponse.value;
                 n = proposalResponse.proposal_num;
+                if (this.sequence_number == 7)
+                    System.out.println("7 before accept");
                 boolean result = sendAcceptToAll(this.sequence_number, n, proposalResponse.value);
 
                 // Sending decided msg
                 // Check if majority has been reached
                 if (result){
-                    if (this.sequence_number == 6)
-                        System.out.println("6 start decide");
                     sendDecidedToAll(this.sequence_number, n, v);
                 }
             }
@@ -266,8 +285,6 @@ public class Paxos implements PaxosRMI, Runnable{
         for (int i=0; i<this.peers.length; i++) {
             Response prepResponse;
             prepreq_cnt++;
-            if (seq == 6)
-                System.out.println("6 prepare loop");
             if (i != this.me)
                 prepResponse = this.Call("Prepare", prepRequest, i);// Rmi msg to everyone
             else
@@ -275,7 +292,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
             // Check Response to the prepare msg
             if (prepResponse != null){
-
+                this.updateMaxSeqSeen(prepResponse.proposal_num);
                 if (prepResponse.proposal_accepted) {   // Check response didnt fail (null) & accepted
 
                     accepted_cnt++;                         // Increment number of accepted
@@ -285,6 +302,7 @@ public class Paxos implements PaxosRMI, Runnable{
                     }
                 }
 //                else {
+//                    this.updateMaxSeqSeen(prepResponse.proposal_num);
 //                    if (updateProposalNumber(this.sequence_number, n_a)) {
 //                        return null;
 //                    }
@@ -292,6 +310,7 @@ public class Paxos implements PaxosRMI, Runnable{
             }
         }
 
+        this.updateMaxSeqSeen(n_a);
         // Check if majority has been reached
         Response proposalResponse = new Response(); // Create response msg
         if(accepted_cnt >= majority){
@@ -304,6 +323,7 @@ public class Paxos implements PaxosRMI, Runnable{
         else {
             proposalResponse.majority = false;       // Set flag false
         }
+
         return proposalResponse;
     }
 
@@ -311,12 +331,12 @@ public class Paxos implements PaxosRMI, Runnable{
     // RMI handler
     public Response Prepare(Request req){
         // your code here
-
         mutex.lock();
         prepres_cnt++;
         Response proposalResponse = new Response();
-        Instance instance = this.getInstance(req.sequence_number);
-
+        Instance instance = this.getInstance2(req.sequence_number);
+        this.updateMaxSeqSeen(req.proposal_num);
+        this.updateMaxSeqSeen(instance.highest_proposal);
         // Send the acceptance message if the received proposal number is greater than any this instance has seen
         if (req.proposal_num > instance.highest_proposal) {
             instance.highest_proposal = req.proposal_num;
@@ -325,15 +345,14 @@ public class Paxos implements PaxosRMI, Runnable{
             proposalResponse.proposal_num = instance.highest_proposal;
             proposalResponse.value = instance.value;
             proposalResponse.proposal_accepted = true;
-            if (req.sequence_number == 6)
-                System.out.println("6 prepare accepted");
+//            if (req.sequence_number == 6)
+//                System.out.println("6 prepare accepted");
         }
 
         // Send rejection
         else {
             proposalResponse.proposal_accepted = false;
-            if (req.sequence_number == 6)
-                System.out.println("6 prepare rejected");
+            proposalResponse.proposal_num = instance.highest_proposal;
         }
         mutex.unlock();
         return proposalResponse;
@@ -343,7 +362,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
 
     private boolean sendAcceptToAll(int seq, int n, Object value) {
-        Instance instance = this.getInstance(seq);
+        //Instance instance = this.getInstance(seq);
         Request acceptedRequest = new Request(seq, n, value);
 
         // Broadcast accept msg
@@ -362,7 +381,7 @@ public class Paxos implements PaxosRMI, Runnable{
                 accepted_cnt++;
             }
         }
-
+        this.updateMaxSeqSeen(n);
         return accepted_cnt >= majority;
     }
 
@@ -370,16 +389,17 @@ public class Paxos implements PaxosRMI, Runnable{
 
     public Response Accept(Request req){
         // your code here
-
         mutex.lock();
         Response acceptorResponse;
-        Instance instance = this.getInstance(req.sequence_number);
+        Instance instance = this.getInstance2(req.sequence_number);
         accres_cnt++;
+        this.updateMaxSeqSeen(req.sequence_number);
+        this.updateMaxSeqSeen(instance.highest_proposal);
 
         // Send the acceptance message if the received proposal number is greater than any this instance has seen
         if(req.proposal_num >= instance.highest_proposal) {
             instance.highest_proposal = req.proposal_num;
-            instance.highest_proposal = req.proposal_num;
+            instance.highest_accepted = req.proposal_num;
             instance.value = req.value;
             acceptorResponse = new Response();
             acceptorResponse.accept_accepted = true;
@@ -406,18 +426,18 @@ public class Paxos implements PaxosRMI, Runnable{
         int done = this.done_list.get(this.me);
         for (int i=0; i<this.peers.length; i++) {
             dreq_cnt++;
-            mutex.lock();
+            //mutex.lock();
             Response decidedResponse;
 
             if (i == this.me) {
                 this.value_map.put(this.me, v);
                 Request decideRequest = new Request(seq, n, v, this.me, done);
-                mutex.unlock();
+                //mutex.unlock();
                 decidedResponse = this.Decide(decideRequest);
             }
             else {
                 Request decideRequest = new Request(seq, n, v, this.me, done);
-                mutex.unlock();
+                //mutex.unlock();
                 decidedResponse = this.Call("Decide", decideRequest, i);
             }
 
@@ -429,15 +449,14 @@ public class Paxos implements PaxosRMI, Runnable{
         // your code here
         mutex.lock();
         dres_cnt++;
-        // System.out.println("Decide for Paxos " + this.me + " with " + req);
-        Instance instance = this.getInstance(req.sequence_number);
+        Instance instance = this.getInstance2(req.sequence_number);
 //        instance.highest_proposal = req.proposal_num;
 //        instance.highest_proposal = req.proposal_num;
         instance.value = req.value;
         instance.state = State.Decided;
-        //System.out.println("Paxos " + this.me + " decided " + this.getInstance(req.sequence_number) + "\n    seq: " + req.sequence_number);
 
-        //Done(req.seq);
+//        if (req.sequence_number == 6)
+//            System.out.println("6 decided");
 
         if (this.done_list.get(req.me) < req.done)
             this.done_list.set(req.me, req.done);

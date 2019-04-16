@@ -16,7 +16,7 @@ public class Request implements Serializable {
     int me;
     int done;
 
-
+//
     // Your constructor and methods here
     public Request(int seq, int proposal_num, Object value) {
         this.sequence_number = seq;

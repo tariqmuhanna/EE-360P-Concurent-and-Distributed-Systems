@@ -10,7 +10,7 @@ public class Response implements Serializable {
     static final long serialVersionUID=2L;
     public boolean accept_accepted;
     // your data here
-
+//
     int proposal_num;
     boolean proposal_accepted;
     boolean majority;

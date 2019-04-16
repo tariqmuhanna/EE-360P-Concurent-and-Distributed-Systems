@@ -455,8 +455,7 @@ public class Paxos implements PaxosRMI, Runnable{
         instance.value = req.value;
         instance.state = State.Decided;
 
-//        if (req.sequence_number == 6)
-//            System.out.println("6 decided");
+        System.out.println(req.sequence_number + "decdided");
 
         if (this.done_list.get(req.me) < req.done)
             this.done_list.set(req.me, req.done);

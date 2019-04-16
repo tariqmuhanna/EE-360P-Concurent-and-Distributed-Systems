@@ -6,7 +6,7 @@ import static org.junit.Assert.*;
 /**
  * This is a subset of entire test cases
  * For your reference only.
- */
+ */   //
 public class KVPaxosTest {
 
 

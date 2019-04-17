@@ -376,7 +376,6 @@ public class Paxos implements PaxosRMI, Runnable{
     }
 
 
-
     public Response Accept(Request req){
         // your code here
         done_list.set(req.peer, req.done);

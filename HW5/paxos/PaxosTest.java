@@ -123,7 +123,7 @@ public class PaxosTest {
         cleanup(pxa);
 
     }
-
+//
     @Test
     public void TestDeaf(){
 

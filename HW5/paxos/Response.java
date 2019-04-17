@@ -33,7 +33,6 @@
 //    }
 //}
 
-
 package paxos;
 import java.io.Serializable;
 
@@ -51,6 +50,7 @@ public class Response implements Serializable, Comparable<Response> {
     Object value;
     int done;
 
+
     Response () {
         this.accepted = false;
         this.pid = null;
@@ -58,6 +58,7 @@ public class Response implements Serializable, Comparable<Response> {
         this.done = -1;
     }
 
+    
     Response (boolean ok, PID pid, Object value, int done) {
         this.accepted = ok;
         this.pid = pid;

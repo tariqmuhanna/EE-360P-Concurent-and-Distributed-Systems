@@ -36,5 +36,5 @@ public class PID implements Serializable, Comparable<PID> {
 
         else return -(proposal_num - other.proposal_num);
     }
-
 }
+

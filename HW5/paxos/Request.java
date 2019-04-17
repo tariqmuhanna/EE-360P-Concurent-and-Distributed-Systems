@@ -33,7 +33,6 @@
 //    }
 //}
 
-
 package paxos;
 import java.io.Serializable;
 
@@ -52,6 +51,7 @@ public class Request implements Serializable {
     PID pid;
     int done;
 
+
     Request() {
         this.seq = -1;
         this.pid = null;
@@ -59,6 +59,7 @@ public class Request implements Serializable {
         this.value = null;
         this.done = -1;
     }
+
 
     Request(int seq, PID pid, int peer, Object value, int done) {
         this.seq = seq;

@@ -2,32 +2,40 @@ package paxos;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * This class is the main class you need to implement paxos instances.
- */
+
 
 class Instance {
-
     int highest_proposal;
     int highest_accepted;
-    int sequnce_number;
     Object value;
     State state;
+    PID pid;
 
     public Instance() {
         highest_proposal = -1;  // They can only be positive right?
         highest_accepted = -1;
         state = State.Pending;
         value = null;
+        pid = null;
+    }
+
+    public Instance(PID pid, Object value, State state) {
+        highest_proposal = -1;  // They can only be positive right?
+        highest_accepted = -1;
+        this.state = state;
+        this.value = value;
+        this.pid = pid;
     }
 }
 
+/**
+ * This class is the main class you need to implement paxos instances.
+ */
 public class Paxos implements PaxosRMI, Runnable{
 
     ReentrantLock mutex;
@@ -42,30 +50,14 @@ public class Paxos implements PaxosRMI, Runnable{
     AtomicBoolean unreliable;// for testing
 
     // Your data here
-    Map<Integer, Instance> instance_map =      // Stores & Keeps track of instances
-            new ConcurrentHashMap<Integer, Instance>();
+    Map<Integer, Instance> instance_map;
 
+    int max_seq_seen;
     int sequence_number;                    // Your own sequence number
     Object value;                           // Your own value
     ArrayList<Integer> done_list;           // List of finished peers
     int majority;
     State state;
-    int NULL = -1;
-
-
-
-    private Instance getInstance(int sequence_number) {
-        mutex.lock();                                       // Mutex
-
-        if(!instance_map.containsKey(sequence_number)) {    // Check if contains key
-            Instance instance = new Instance();             // Make new instance if not
-            instance_map.put(sequence_number, instance);
-        }
-
-        mutex.unlock();
-        return instance_map.get(sequence_number);
-
-    }
 
     /**
      * Call the constructor to create a Paxos peer.
@@ -82,14 +74,15 @@ public class Paxos implements PaxosRMI, Runnable{
         this.unreliable = new AtomicBoolean(false);
 
         // Your initialization code here
+        instance_map = Collections.synchronizedMap(new HashMap<Integer, Instance>());
+        done_list = new ArrayList<>();
         for (int i=0; i<peers.length; i++){
-            done_list.add(NULL);        // Init complete list to all -1
+            done_list.add(-1);          // Init complete list to all -1
         }
-        majority = peers.length/2 + 1;  // Number require to have majority votes
-//        highest_proposal = Integer.MIN_VALUE;
-//        highest_accepted = Integer.MIN_VALUE;
-        state = State.Pending;          // Initially the stat is pending
+        sequence_number = -1;
         value = null;                   // A value has yet to be set
+        max_seq_seen = -1;
+        state = State.Pending;          // Initially the stat is pending
 
         // register peers, do not modify this part
         try{
@@ -138,6 +131,37 @@ public class Paxos implements PaxosRMI, Runnable{
     }
 
 
+    // HELPER FUNCTIONS
+    private void updateMaxSeqSeen(int seq) {
+        if (seq > this.max_seq_seen) {
+            this.max_seq_seen = seq;
+        }
+    }
+
+    private void cleanUp(){
+        HashSet<Integer> keys = new HashSet<>();
+        synchronized(instance_map) {
+            for (Map.Entry<Integer, Instance> entry: instance_map.entrySet()) {
+                if (entry.getKey() <= (Min() - 1))
+                    keys.add(entry.getKey());
+            }
+        }
+        for (Integer key: keys) {
+            instance_map.remove(key);
+        }
+    }
+
+    private Instance getInstance(int seq) {
+        if(!instance_map.containsKey(seq)) {    // Check if contains key
+            Instance instance = new Instance();             // Make new instance if not
+            instance.highest_accepted = -1;
+            instance.highest_proposal = -1;
+            instance.value = null;
+            instance_map.put(seq, instance);
+        }
+        return instance_map.get(seq);
+    }
+
     /**
      * The application wants Paxos to start agreement on instance seq,
      * with proposed value v. Start() should start a new thread to run
@@ -157,101 +181,258 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Start(int seq, Object value){
         // Your code here
+        if (seq < Min())
+            return;
+
+        updateMaxSeqSeen(seq);
+        Instance instance = new Instance(null,null,State.Pending);
+        instance_map.put(seq, instance);
         this.sequence_number = seq;             // Set seq number
         this.value = value;                     // Set object value
         Thread thread = new Thread(this);// Make new thread
         thread.start();                        // Start
-
     }
 
-    // n_p (highest prepare seen)
-    // n_a, v_a (highest accept seen)
-
-//    proposer(v):
-//            while not decided:
-//    choose n, unique and higher than any n seen so far
-//    send prepare(n) to all servers including self
-//    if prepare_ok(n, n_a, v_a) from majority:
-//    v' = v_a with highest n_a; choose own v otherwise
-//    send accept(n, v') to all
-//            if accept_ok(n) from majority:
-//    send decided(v') to all
     @Override
-    public void run(){      // PROPOSER
+    public void run(){
         //Your code here
+        int curr_seq = this.sequence_number; // seq
+        int n = 0;
+        Request request;
+        Response response;
+        boolean accept_result = false;
 
-        // Find the minimum & discard all instances with seq numbers ≤ minimum
-        if (this.sequence_number <= this.Min())   // If seq # is smaller than minimum, no need
-            return;                                 // to proceed further
+        while (this.instance_map.get(curr_seq).state == State.Pending) {
+            //*****PREPARE PHASE*****
+            // Send Prepare msg to everyone
+            Response prepareResponse = sendPrepareToAll(curr_seq,
+                    new PID(n, this.me),
+                    this.me,
+                    this.value,
+                    this.done_list.get(me));
 
-        // while not decided, loop
-        while (this.getInstance(this.sequence_number).state != State.Decided) {
-
-        //*****PREPARE PHASE*****
-            // Choose n, unique and higher than any n seen so far
-                // send prepare(n) to all servers including self
-            Instance instance = this.getInstance(sequence_number);
-            Object v_a = value;			    // proposer's orig value
-            int n_a = instance.highest_proposal;
-            int accepted_cnt = 0;           // # of prepare msgs accepted
-
-            // Compose prepare msg
-            if (this.me+1 > instance.highest_proposal)
-                instance.highest_proposal = this.me+1;
-            Request prepRequest = new Request(this.sequence_number,
-                    instance.highest_proposal, value);
-
-            // Broadcast prepare msg
-            for (int i=0; i<this.peers.length; i++) {
-                Response prepResponse;
-
-                if (i != this.me)
-                    prepResponse = this.Call("Prepare", prepRequest, i);// Rmi msg to everyone
-                else
-                    prepResponse = this.Prepare(prepRequest);               // Msg to myself
-
-                // Check Response to the prepare msg
-                if ((prepResponse != null) &&
-                        prepResponse.proposal_accepted) {   // Check response didnt fail (null) & accepted
-
-                    accepted_cnt++;                         // Increment number of accepted
-                    if (prepResponse.proposal_num > n_a) {  // Update parameters
-                        n_a = prepResponse.proposal_num;
-                        v_a = prepResponse.value;
-                    }
-                }
+            if (prepareResponse != null && prepareResponse.accepted){   // Check if prepare msg got majority
+                n = prepareResponse.pid.proposal_num;                         // Update vars
+                this.value = prepareResponse.value;
             }
-
-            // Check if majority has been reached
-            Response proposalResponse = new Response(); // Create response msg
-            if(accepted_cnt >= majority){
-                proposalResponse.proposal_num = n_a;    // Max proposal number
-                proposalResponse.value = v_a;           // Value associated with max proposal number
-                proposalResponse.majority = true;       // Set flag true
+            else {
+                n = prepareResponse.pid.proposal_num;                         // Update unique num
+                continue;
             }
 
 
-        //*****ACCEPTOR PHASE*****
+            //*****ACCEPT PHASE*****
+            // Send accept msg to everyone
+            Response acceptResponse = sendAcceptToAll(curr_seq,
+                    new PID(n, this.me),
+                    this.me,
+                    this.value,
+                    this.done_list.get(me));
+
+            if (acceptResponse != null && acceptResponse.accepted){     // Check if accept msg got majority
+                n = acceptResponse.pid.proposal_num;                          // Update vars
+                this.value = acceptResponse.value;
+            }
+            else {
+                n = acceptResponse.pid.proposal_num;                          // Update unique num
+                continue;
+            }
 
 
+            //*****DECIDE PHASE*****
+            // Send decide msg to everyone
+            sendDecidedToAll(curr_seq, new PID(n, me), me, value, done_list.get(me));
         }
     }
 
 
+
+//    public Response sendPrepareToAll(int seq, int n, Object value) {
+    public Response sendPrepareToAll(int seq, PID pid, int peer, Object value, int done) {
+        Response response;
+        Request request = new Request(seq, pid, peer, value, done);
+        int accepted_cnt = 0;
+        int n = pid.proposal_num;
+        Object v_a = null;
+        PID pid_a = null;
+        PriorityQueue<Response> accepted_list = new PriorityQueue<>();
+        PriorityQueue<Response> refused_list = new PriorityQueue<>();
+
+        // Broadcast prepare msg
+        for (int i = 0; i < peers.length; i++) {
+            if (i != me)
+                response = Call("Prepare", request, i);
+            else
+                response = Prepare(request);
+
+            // process response
+            if (response != null) {
+                if (response.accepted) {            // Msg accepted
+                    accepted_cnt++;
+                    accepted_list.add(response);
+                } else {                            // Msg rejected
+                    refused_list.add(response);
+                }
+
+                this.done_list.set(i, response.done);
+                cleanUp();
+            }
+        }
+
+        // Majority check
+        Response proposalResponse;
+        if (accepted_list.size() > peers.length / 2) {   // Majortity succeeded
+            if (accepted_list.peek().value != null) {
+                value = accepted_list.peek().value;      // Update Value from highest proposal
+            }
+        } else {                                         // Failed to get majortiy
+            if (refused_list.peek().pid != null)
+                n = refused_list.peek().pid.proposal_num + 1;  // Update unique num from former num if not null
+            else {
+                n++;                                     // Update unique num by inc
+            }
+            proposalResponse = new Response(false, new PID(n, this.me), null, -1);
+            return proposalResponse;                     // Return failure msg
+        }
+        proposalResponse = new Response(true, new PID(n, this.me), value, this.done_list.get(me));
+        return proposalResponse;                         // Return Success msg
+    }
+
     // RMI handler
     public Response Prepare(Request req){
         // your code here
+        done_list.set(req.peer, req.done);
+        cleanUp();
+        Instance instance = getInstance(req.seq);
+        Response response = new Response();
 
+        // Prepare request accepted
+//        if (instance.pid == null || req.compare(instance.pid) < 0) {
+        if (instance.pid == null || req.pid.compareTo(instance.pid) < 0) {
+            instance.pid = req.pid;
+            response.accepted = true;
+            response.done = done_list.get(this.me);
+            response.pid = instance.pid;
+            response.value = instance.value;
+
+        }
+        // Prepare request rejected
+        else {
+            response.accepted = false;
+            response.done = done_list.get(this.me);
+            response.pid = instance.pid;
+            response.value = instance.value;
+        }
+        return response;
     }
+
+    private Response sendAcceptToAll(int seq, PID pid, int peer, Object value, int done) {
+        Response response;
+        Request request = new Request(seq, pid, peer, value, done);
+        int accepted_cnt = 0;
+        int n = pid.proposal_num;
+        PriorityQueue<Response> accepted_list = new PriorityQueue<>();
+        PriorityQueue<Response> refused_list = new PriorityQueue<>();
+
+        // Broadcast prepare msg
+        for (int i = 0; i < peers.length; i++) {
+            if (i != me)
+                response = Call("Accept", request, i);
+            else
+                response = Accept(request);
+
+            // process response
+
+            if (response != null) {
+                if (response.accepted) {            // Msg accepted
+                    accepted_cnt++;
+                    accepted_list.add(response);
+                } else {                            // Msg rejected
+                    refused_list.add(response);
+                }
+
+                this.done_list.set(i, response.done);
+                cleanUp();
+            }
+        }
+
+        Response acceptResponse;
+        if (accepted_list.size() > peers.length / 2) {   // Majortity succeeded
+            if (accepted_list.peek().value != null) {
+                value = accepted_list.peek().value;      // Update Value from highest proposal
+            }
+        } else {                                         // Failed to get majortiy
+            if (refused_list.peek().pid != null)
+                n = refused_list.peek().pid.proposal_num + 1;  // Update unique num from former num if not null
+            else {
+                n++;                                     // Update unique num by inc
+            }
+            acceptResponse = new Response(false, new PID(n, this.me), null, -1);
+            return acceptResponse;                     // Return failure msg
+        }
+
+        acceptResponse = new Response(true, new PID(n, this.me), value, this.done_list.get(me));
+        return acceptResponse;                         // Return Success msg
+    }
+
+
 
     public Response Accept(Request req){
         // your code here
+        done_list.set(req.peer, req.done);
+        cleanUp();
+        Instance instance = getInstance(req.seq);
+        Response response = new Response();
+
+        int x = req.pid.compareTo(instance.pid);
+        // Accept request accepted
+        if (instance.pid == null || req.pid.compareTo(instance.pid) <= 0) {
+            instance.pid = req.pid;
+            instance.value = req.value;
+            response.accepted = true;
+            response.done = done_list.get(this.me);
+            response.pid = instance.pid;
+            response.value = instance.value;
+
+        }
+        // Accept request rejected
+        else {
+            response.accepted = false;
+            response.done = done_list.get(this.me);
+            response.pid = instance.pid;
+            response.value = instance.value;
+        }
+        return response;
+    }
+
+
+    private void sendDecidedToAll(int seq, PID pid, int peer, Object value, int done){
+        Response response;
+        Request request = new Request(seq, pid, peer, value, done);
+
+        for (int i = 0; i < peers.length; i++) {
+            if (i != me)
+                response = Call("Decide", request, i);
+            else
+                response = Decide(request);
+
+            if(response != null) {
+                done_list.set(i, response.done);
+                cleanUp();
+            }
+        }
 
     }
 
     public Response Decide(Request req){
         // your code here
-
+        done_list.set(req.peer, req.done);
+        cleanUp();
+        Instance instance = getInstance(req.seq);
+        instance.value = req.value;
+        instance.state = State.Decided;
+        Response response = new Response(false, instance.pid, instance.value, done_list.get(me));
+        return response;
     }
 
     /**
@@ -262,6 +443,8 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Done(int seq) {
         // Your code here
+        done_list.set(me, seq);
+        cleanUp();
     }
 
 
@@ -272,6 +455,9 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Max(){
         // Your code here
+        if (instance_map.size() <= 0)       // Make sure its not empty
+            return -1;
+        return Collections.max(instance_map.keySet());
     }
 
     /**
@@ -279,19 +465,16 @@ public class Paxos implements PaxosRMI, Runnable{
      * where z_i is the highest number ever passed
      * to Done() on peer i. A peers z_i is -1 if it has
      * never called Done().
-
      * Paxos is required to have forgotten all information
      * about any instances it knows that are < Min().
      * The point is to free up memory in long-running
      * Paxos-based servers.
-
      * Paxos peers need to exchange their highest Done()
      * arguments in order to implement Min(). These
      * exchanges can be piggybacked on ordinary Paxos
      * agreement protocol messages, so it is OK if one
      * peers Min does not reflect another Peers Done()
      * until after the next instance is agreed to.
-
      * The fact that Min() is defined as a minimum over
      * all Paxos peers means that Min() cannot increase until
      * all peers have been heard from. So if a peer is dead
@@ -304,7 +487,7 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public int Min(){
         // Your code here
-
+        return Collections.min(done_list) + 1;
     }
 
 
@@ -318,7 +501,15 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public retStatus Status(int seq){
         // Your code here
+        State state_status;
+        Object value_status;
 
+        if(instance_map.containsKey(seq)) {
+            state_status = instance_map.get(seq).state;
+            value_status = instance_map.get(seq).value;
+            return new retStatus(state_status, value_status);
+        }
+        else return new retStatus(State.Pending, null);
     }
 
     /**

@@ -48,7 +48,6 @@ public class Request implements Serializable {
 
     int seq;
     Object value;
-<<<<<<< HEAD
     int peer;
     PID pid;
     int done;
@@ -65,29 +64,7 @@ public class Request implements Serializable {
         this.seq = seq;
         this.pid = pid;
         this.peer = peer;
-=======
-    int me;
-    int done;
-
-//
-    // Your constructor and methods here
-    public Request(int seq, int proposal_num, Object value) {
-        this.sequence_number = seq;
-        this.proposal_num = proposal_num;
->>>>>>> 92ad17805e1ce5159c1495cb28cb33a986df5510
         this.value = value;
         this.done = done;
     }
-<<<<<<< HEAD
 }
-=======
-
-    public Request(int seq, int proposal_num, Object value, int me, int done) {
-        this.sequence_number = seq;
-        this.proposal_num = proposal_num;
-        this.value = value;
-        this.me = me;
-        this.done = done;
-    }
-}
->>>>>>> 92ad17805e1ce5159c1495cb28cb33a986df5510

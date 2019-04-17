@@ -44,20 +44,10 @@ import java.io.Serializable;
  */
 public class Response implements Serializable, Comparable<Response> {
     static final long serialVersionUID=2L;
-<<<<<<< HEAD
 
     boolean accepted;
     PID pid;
     int peer;
-=======
-    public boolean accept_accepted;
-    // your data here
-//
-    int proposal_num;
-    boolean proposal_accepted;
-    boolean majority;
-    int sequence_number;
->>>>>>> 92ad17805e1ce5159c1495cb28cb33a986df5510
     Object value;
     int done;
 
@@ -83,22 +73,4 @@ public class Response implements Serializable, Comparable<Response> {
         return pid.compareTo(other.pid);
     }
 
-<<<<<<< HEAD
 }
-=======
-    // Your constructor and methods here
-    public Response() {
-        this.sequence_number = -2;
-        this.proposal_num = Integer.MIN_VALUE;
-        this.value = null;
-        this.proposal_accepted = false;
-        this.accept_accepted = false;
-    }
-
-    public Response(int seq, int num, Object val) {
-        this.sequence_number = seq;
-        this.proposal_num = num;
-        this.value = val;
-    }
-}
->>>>>>> 92ad17805e1ce5159c1495cb28cb33a986df5510

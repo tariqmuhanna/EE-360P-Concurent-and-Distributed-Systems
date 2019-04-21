@@ -10,26 +10,27 @@ import java.util.concurrent.locks.ReentrantLock;
 
 
 class Instance {
+	//Instnace objects are put into a map such so <key = seq number, value = instance object>
     int highest_proposal;
     int highest_accepted;
     Object value;
     State state;
-    PID pid;
+   // PID pid;
 
     public Instance() {
         highest_proposal = -1;  // They can only be positive right?
         highest_accepted = -1;
         state = State.Pending;
         value = null;
-        pid = null;
+       // pid = null;
     }
-
-    public Instance(PID pid, Object value, State state) {
-        highest_proposal = -1;  // They can only be positive right?
+    //pid is like sequence number
+    public Instance(int proposal, Object value, State state) {
+        highest_proposal = proposal;  // They can only be positive right?
         highest_accepted = -1;
         this.state = state;
         this.value = value;
-        this.pid = pid;
+      //  this.pid = pid;
     }
 }
 
@@ -64,11 +65,17 @@ public class Paxos implements PaxosRMI, Runnable{
      * The hostnames of all the Paxos peers (including this one)
      * are in peers[]. The ports are in ports[].
      */
-    public Paxos(int me, String[] peers, int[] ports){
 
+    public void testPort() {
+    	System.out.println("Me: " + this.me + " Ports: " + Arrays.toString(ports));
+    	
+    }
+    public Paxos(int me, String[] peers, int[] ports){
+    	
         this.me = me;
-        this.peers = peers;
-        this.ports = ports;
+        this.peers = Arrays.copyOf(peers, peers.length);
+        
+        this.ports = Arrays.copyOf(ports, ports.length);
         this.mutex = new ReentrantLock();
         this.dead = new AtomicBoolean(false);
         this.unreliable = new AtomicBoolean(false);
@@ -157,7 +164,7 @@ public class Paxos implements PaxosRMI, Runnable{
             instance.highest_accepted = -1;
             instance.highest_proposal = -1;
             instance.value = null;
-            instance_map.put(seq, instance);
+            instance_map.put(seq, instance);	//this gets rid of the last instance at this sequence number though, do we want?
         }
         return instance_map.get(seq);
     }
@@ -181,42 +188,60 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Start(int seq, Object value){
         // Your code here
+    	
+    	//That instance was forgotten
         if (seq < Min())
             return;
 
         updateMaxSeqSeen(seq);
-        Instance instance = new Instance(null,null,State.Pending);
+        
+        
+        Instance instance = new Instance(-1, null,State.Pending);
         instance_map.put(seq, instance);
         this.sequence_number = seq;             // Set seq number
         this.value = value;                     // Set object value
         Thread thread = new Thread(this);// Make new thread
-        thread.start();                        // Start
+        thread.start();                        // Start proposing
     }
 
     @Override
     public void run(){
         //Your code here
         int curr_seq = this.sequence_number; // seq
-        int n = 0;
+        int n = this.me; //unique value
         Request request;
         Response response;
         boolean accept_result = false;
 
+    	System.out.println(this.sequence_number + " instance running");
+    	
         while (this.instance_map.get(curr_seq).state == State.Pending) {
             //*****PREPARE PHASE*****
             // Send Prepare msg to everyone
             Response prepareResponse = sendPrepareToAll(curr_seq,
-                    new PID(n, this.me),
+                    //new PID(n, this.me),
+            		n,
+            		//this.sequence_number,
+                    //n is proposal number?
                     this.me,
+                    
                     this.value,
-                    this.done_list.get(me));
+                    this.done_list.get(me)
+                    //what does done_list do?
+            		);
 
             if (prepareResponse != null && prepareResponse.accepted){   // Check if prepare msg got majority
-                n = prepareResponse.pid.proposal_num;                         // Update vars
+                n = prepareResponse.proposal;                         // Update vars
                 this.value = prepareResponse.value;
             }
+            else if(prepareResponse.value == this.value) {
+            	//if the value that is highest is equal to my own proposing value, stop?
+            	//right now just continue without updating proposal number so doesn't prolong phases
+            	continue;
+            	
+            }
             else {
-                n = prepareResponse.pid.proposal_num;                         // Update unique num
+            	n = (prepareResponse.proposal/10 +1)*10 + this.me;                         // Update unique num
                 continue;
             }
 
@@ -224,42 +249,60 @@ public class Paxos implements PaxosRMI, Runnable{
             //*****ACCEPT PHASE*****
             // Send accept msg to everyone
             Response acceptResponse = sendAcceptToAll(curr_seq,
-                    new PID(n, this.me),
+                    n,
                     this.me,
                     this.value,
                     this.done_list.get(me));
 
             if (acceptResponse != null && acceptResponse.accepted){     // Check if accept msg got majority
-                n = acceptResponse.pid.proposal_num;                          // Update vars
+                n = acceptResponse.proposal;                          // Update vars
                 this.value = acceptResponse.value;
             }
+            else if(prepareResponse.value == this.value) {
+            	//if the value that is highest is equal to my own proposing value, stop?
+            	//right now just continue without updating proposal number so doesn't prolong phases
+            	continue;
+            	
+            }
             else {
-                n = acceptResponse.pid.proposal_num;                          // Update unique num
+                n = (acceptResponse.proposal/10 +1)*10 + this.me;                     // Update unique num
                 continue;
             }
 
 
             //*****DECIDE PHASE*****
             // Send decide msg to everyone
-            sendDecidedToAll(curr_seq, new PID(n, me), me, value, done_list.get(me));
+            sendDecidedToAll(curr_seq, n, me, value, done_list.get(me));
+            //while(this.instance_map.get(curr_seq).state == State.Decided);
         }
+    	System.out.println(this.me + " dies ");
     }
 
-
+    private Comparator<Response> responseComparator = new Comparator<Response>() {
+        @Override
+        public int compare(Response s1, Response s2) {
+            return s2.proposal - s1.proposal;
+            //so we have max heap
+        }
+    };
 
 //    public Response sendPrepareToAll(int seq, int n, Object value) {
-    public Response sendPrepareToAll(int seq, PID pid, int peer, Object value, int done) {
+    public Response sendPrepareToAll(int seq, int propn, int peer, Object value, int done) {
+
         Response response;
-        Request request = new Request(seq, pid, peer, value, done);
+        Request request = new Request(seq, propn, peer, value, done);
         int accepted_cnt = 0;
-        int n = pid.proposal_num;
+        int n = propn;
         Object v_a = null;
-        PID pid_a = null;
-        PriorityQueue<Response> accepted_list = new PriorityQueue<>();
-        PriorityQueue<Response> refused_list = new PriorityQueue<>();
+    //    PID pid_a = null;
+
+        PriorityQueue<Response> accepted_list = new PriorityQueue<>(responseComparator);
+        PriorityQueue<Response> refused_list = new PriorityQueue<>(responseComparator);
 
         // Broadcast prepare msg
         for (int i = 0; i < peers.length; i++) {
+        	System.out.println(this.me + " sends prepare to peer  "+i
+        			+" port " + this.ports[i] +" with pn: "  + propn + " value: " + value.toString());
             if (i != me)
                 response = Call("Prepare", request, i);
             else
@@ -275,64 +318,78 @@ public class Paxos implements PaxosRMI, Runnable{
                 }
 
                 this.done_list.set(i, response.done);
+                //out of all peers, which ones are done
                 cleanUp();
             }
         }
 
         // Majority check
         Response proposalResponse;
-        if (accepted_list.size() > peers.length / 2) {   // Majortity succeeded
+        if (accepted_list.size() > peers.length / 2) {   // Majority succeeded
             if (accepted_list.peek().value != null) {
                 value = accepted_list.peek().value;      // Update Value from highest proposal
             }
         } else {                                         // Failed to get majortiy
-            if (refused_list.peek().pid != null)
-                n = refused_list.peek().pid.proposal_num + 1;  // Update unique num from former num if not null
-            else {
-                n++;                                     // Update unique num by inc
-            }
-            proposalResponse = new Response(false, new PID(n, this.me), null, -1);
+            if (refused_list.peek().proposal != -1)
+                //n = refused_list.peek().proposal;   Update unique num from former num if not null
+            	n = refused_list.peek().proposal; //send the highest proposal so far
+          
+            
+            proposalResponse = new Response(false, n, null, -1);
             return proposalResponse;                     // Return failure msg
         }
-        proposalResponse = new Response(true, new PID(n, this.me), value, this.done_list.get(me));
+        proposalResponse = new Response(true, n, value, this.done_list.get(me));
         return proposalResponse;                         // Return Success msg
     }
 
     // RMI handler
     public Response Prepare(Request req){
+
         // your code here
         done_list.set(req.peer, req.done);
         cleanUp();
         Instance instance = getInstance(req.seq);
+
+        if(this.instance_map.get(req.seq).state == State.Decided)
+        	this.instance_map.get(req.seq).state = State.Pending;
+        
         Response response = new Response();
 
         // Prepare request accepted
 //        if (instance.pid == null || req.compare(instance.pid) < 0) {
-        if (instance.pid == null || req.pid.compareTo(instance.pid) < 0) {
-            instance.pid = req.pid;
+        if (req.proposal > instance.highest_proposal) {
+//
             response.accepted = true;
             response.done = done_list.get(this.me);
-            response.pid = instance.pid;
-            response.value = instance.value;
+            response.proposal = instance.highest_proposal;
+            response.value = req.value;
+            instance.value = req.value; //now the value accepted is the highest
+            instance.highest_proposal = req.proposal;
 
+        	System.out.println(this.me + " accepts P# " + req.proposal + " with value " + req.value);
         }
         // Prepare request rejected
         else {
             response.accepted = false;
             response.done = done_list.get(this.me);
-            response.pid = instance.pid;
+            response.proposal = instance.highest_proposal;
             response.value = instance.value;
+
+        	System.out.println(this.me + " rejects P# " + req.proposal);
+        
         }
         return response;
     }
 
-    private Response sendAcceptToAll(int seq, PID pid, int peer, Object value, int done) {
+    private Response sendAcceptToAll(int seq, int pid, int peer, Object value, int done) {
+
+    	System.out.println("Broadcast Accept: " + pid);
         Response response;
         Request request = new Request(seq, pid, peer, value, done);
         int accepted_cnt = 0;
-        int n = pid.proposal_num;
-        PriorityQueue<Response> accepted_list = new PriorityQueue<>();
-        PriorityQueue<Response> refused_list = new PriorityQueue<>();
+        int n = pid;
+        PriorityQueue<Response> accepted_list = new PriorityQueue<>(responseComparator);
+        PriorityQueue<Response> refused_list = new PriorityQueue<>(responseComparator);
 
         // Broadcast prepare msg
         for (int i = 0; i < peers.length; i++) {
@@ -347,6 +404,8 @@ public class Paxos implements PaxosRMI, Runnable{
                 if (response.accepted) {            // Msg accepted
                     accepted_cnt++;
                     accepted_list.add(response);
+
+                	System.out.println(this.me + " adds acceptance for pn: "+ response.proposal);
                 } else {                            // Msg rejected
                     refused_list.add(response);
                 }
@@ -362,52 +421,60 @@ public class Paxos implements PaxosRMI, Runnable{
                 value = accepted_list.peek().value;      // Update Value from highest proposal
             }
         } else {                                         // Failed to get majortiy
-            if (refused_list.peek().pid != null)
-                n = refused_list.peek().pid.proposal_num + 1;  // Update unique num from former num if not null
+            if (!refused_list.isEmpty() && refused_list.peek().proposal != -1)
+                n = (refused_list.peek().proposal/10 +1)*10  + this.me;  // Update unique num from former num if not null
             else {
                 n++;                                     // Update unique num by inc
             }
-            acceptResponse = new Response(false, new PID(n, this.me), null, -1);
+            acceptResponse = new Response(false, n, null, -1);
             return acceptResponse;                     // Return failure msg
         }
 
-        acceptResponse = new Response(true, new PID(n, this.me), value, this.done_list.get(me));
+        acceptResponse = new Response(true, n, value, this.done_list.get(me));
         return acceptResponse;                         // Return Success msg
     }
 
 
     public Response Accept(Request req){
         // your code here
+
         done_list.set(req.peer, req.done);
         cleanUp();
         Instance instance = getInstance(req.seq);
         Response response = new Response();
 
-        int x = req.pid.compareTo(instance.pid);
+        //x is negative if request is larger
+        //int x = req.pid.compareTo(instance.pid);
         // Accept request accepted
-        if (instance.pid == null || req.pid.compareTo(instance.pid) <= 0) {
-            instance.pid = req.pid;
+        if (req.proposal >= instance.highest_accepted) {
+            instance.highest_accepted = req.proposal;
             instance.value = req.value;
             response.accepted = true;
             response.done = done_list.get(this.me);
-            response.pid = instance.pid;
+            response.proposal = req.proposal;
             response.value = instance.value;
 
+        	System.out.println(this. me + " accepts A# " + req.proposal + " with value " + req.value);
+            
         }
         // Accept request rejected
         else {
             response.accepted = false;
             response.done = done_list.get(this.me);
-            response.pid = instance.pid;
+            response.proposal = instance.highest_accepted;
             response.value = instance.value;
+
+        	System.out.println(this.me + " rejects A#: " + req.proposal);
         }
         return response;
     }
 
 
-    private void sendDecidedToAll(int seq, PID pid, int peer, Object value, int done){
+    private void sendDecidedToAll(int seq, int proposal, int peer, Object value, int done){
+
+    	System.out.println("Send Decide with proposal number " + proposal);
         Response response;
-        Request request = new Request(seq, pid, peer, value, done);
+        Request request = new Request(seq, proposal, peer, value, done);
 
         for (int i = 0; i < peers.length; i++) {
             if (i != me)
@@ -425,12 +492,13 @@ public class Paxos implements PaxosRMI, Runnable{
 
     public Response Decide(Request req){
         // your code here
+    	System.out.println(this.me + " Deciding on pn: " + req.proposal + " with val " + req.value);
         done_list.set(req.peer, req.done);
         cleanUp();
         Instance instance = getInstance(req.seq);
         instance.value = req.value;
         instance.state = State.Decided;
-        Response response = new Response(false, instance.pid, instance.value, done_list.get(me));
+        Response response = new Response(false, instance.highest_accepted, instance.value, done_list.get(me));
         return response;
     }
 
@@ -442,6 +510,8 @@ public class Paxos implements PaxosRMI, Runnable{
      */
     public void Done(int seq) {
         // Your code here
+
+    	System.out.println(this.me + " finished: " + seq);
         done_list.set(me, seq);
         cleanUp();
     }
@@ -507,6 +577,8 @@ public class Paxos implements PaxosRMI, Runnable{
             state_status = instance_map.get(seq).state;
             value_status = instance_map.get(seq).value;
             return new retStatus(state_status, value_status);
+            //testing:
+            //return new retStatus(State.Decided, 0);
         }
         else return new retStatus(State.Pending, null);
     }

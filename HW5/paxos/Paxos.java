@@ -302,7 +302,7 @@ public class Paxos implements PaxosRMI, Runnable{
         // Broadcast prepare msg
         for (int i = 0; i < peers.length; i++) {
         	System.out.println(this.me + " sends prepare to peer  "+i
-        			+" port " + this.ports[i] +" with pn: "  + propn + " value: " + value.toString());
+        			+" with pn: "  + propn + " value: " + value.toString());
             if (i != me)
                 response = Call("Prepare", request, i);
             else
@@ -352,7 +352,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
         if(this.instance_map.get(req.seq).state == State.Decided)
         	this.instance_map.get(req.seq).state = State.Pending;
-        
+    
         Response response = new Response();
 
         // Prepare request accepted
@@ -446,7 +446,7 @@ public class Paxos implements PaxosRMI, Runnable{
         //x is negative if request is larger
         //int x = req.pid.compareTo(instance.pid);
         // Accept request accepted
-        if (req.proposal >= instance.highest_accepted) {
+        if (req.proposal >= instance.highest_proposal) {
             instance.highest_accepted = req.proposal;
             instance.value = req.value;
             response.accepted = true;

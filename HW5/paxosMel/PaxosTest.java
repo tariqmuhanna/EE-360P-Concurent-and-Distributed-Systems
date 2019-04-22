@@ -16,10 +16,12 @@ public class PaxosTest {
         Object v = null;
         Paxos.retStatus ret;
         for(int i = 0; i < pxa.length; i++){
+    
             if(pxa[i] != null){
                 ret = pxa[i].Status(seq);
                 if(ret.state == State.Decided) {
-                    assertFalse("decided values do not match: seq=" + seq + " i=" + i + " v=" + v + " v1=" + ret.v, counter > 0 && !v.equals(ret.v));
+                    assertFalse("decided values do not match: seq=" + seq + " current paxos index: " + i 
+                    		+ " current value: " + ret.v + " but last value was " + v, counter > 0 && !v.equals(ret.v));
                     counter++;
                     v = ret.v;
                 }
@@ -31,7 +33,7 @@ public class PaxosTest {
 
     private void waitn(Paxos[] pxa, int seq, int wanted){
         int to = 10;
-        for(int i = 0; i < 50; i++){
+        for(int i = 0; i < 30; i++){
             if(ndecided(pxa, seq) >= wanted){
                 break;
             }
@@ -131,11 +133,18 @@ public class PaxosTest {
         Paxos[] pxa = initPaxos(npaxos);
 
         System.out.println("Test: Deaf proposer ...");
+        
         pxa[0].Start(0, "hello");
         waitn(pxa, 0, npaxos);
-
+        
+        
+        
         pxa[1].ports[0]= 1;
         pxa[1].ports[npaxos-1]= 1;
+        
+        for(int i = 0; i < npaxos; i ++) {
+        	pxa[i].testPort();
+        }
         pxa[1].Start(1, "goodbye");
         waitmajority(pxa, 1);
         try {
@@ -147,6 +156,7 @@ public class PaxosTest {
         assertFalse("a deaf peer heard about a decision " + nd, nd != npaxos-2);
 
         pxa[0].Start(1, "xxx");
+      
         waitn(pxa, 1, npaxos-1);
         try {
             Thread.sleep(1000);
@@ -155,8 +165,11 @@ public class PaxosTest {
         }
         nd = ndecided(pxa, 1);
         assertFalse("a deaf peer heard about a decision " + nd, nd != npaxos-1);
-
+        
+        
         pxa[npaxos-1].Start(1, "yyy");
+        
+        pxa[0].Start(1, "yyy");
         waitn(pxa, 1, npaxos);
         System.out.println("... Passed");
         cleanup(pxa);

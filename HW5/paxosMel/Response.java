@@ -45,33 +45,34 @@ public class Response implements Serializable, Comparable<Response> {
     static final long serialVersionUID=2L;
 
     boolean accepted;
-    PID pid;
+//    PID pid;
     int peer;
     Object value;
     int done;
+    int proposal;
 
 
     Response () {
         this.accepted = false;
-        this.pid = null;
+        this.proposal = -1;
         this.value = null;
         this.done = -1;
     }
 
-
-    Response (boolean ok, PID pid, Object value, int done) {
+    
+    Response (boolean ok, int proposal, Object value, int done) {
         this.accepted = ok;
-        this.pid = pid;
+        this.proposal = proposal;
         this.value = value;
         this.done = done;
     }
 
     @Override
     public int compareTo(Response other) {
-        // Make sure enteries are valid
-        if (other == null || other.pid == null || pid == null)
+        // Make sure entries are valid
+        if (other == null || other.proposal == -1|| proposal == -1)
             return -1;
-        return pid.compareTo(other.pid);
+        return this.proposal - other.proposal;
     }
 
 }

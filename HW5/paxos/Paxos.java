@@ -24,13 +24,13 @@ class Instance {
         value = null;
        // pid = null;
     }
-    //pid is like sequence number
+
     public Instance(int proposal, Object value, State state) {
         highest_proposal = proposal;  // They can only be positive right?
         highest_accepted = -1;
         this.state = state;
         this.value = value;
-      //  this.pid = pid;
+
     }
 }
 
@@ -67,15 +67,15 @@ public class Paxos implements PaxosRMI, Runnable{
      */
 
     public void testPort() {
-    	System.out.println("Me: " + this.me + " Ports: " + Arrays.toString(ports));
+    	//System.out.println("Me: " + this.me + " Ports: " + Arrays.toString(ports));
     	
     }
     public Paxos(int me, String[] peers, int[] ports){
     	
         this.me = me;
-        this.peers = Arrays.copyOf(peers, peers.length);
+        this.peers = peers;
         
-        this.ports = Arrays.copyOf(ports, ports.length);
+        this.ports = ports;
         this.mutex = new ReentrantLock();
         this.dead = new AtomicBoolean(false);
         this.unreliable = new AtomicBoolean(false);
@@ -213,7 +213,7 @@ public class Paxos implements PaxosRMI, Runnable{
         Response response;
         boolean accept_result = false;
 
-    	System.out.println(this.sequence_number + " instance running");
+    	////System.out.println(this.sequence_number + " instance running");
     	
         while (this.instance_map.get(curr_seq).state == State.Pending) {
             //*****PREPARE PHASE*****
@@ -275,7 +275,7 @@ public class Paxos implements PaxosRMI, Runnable{
             sendDecidedToAll(curr_seq, n, me, value, done_list.get(me));
             //while(this.instance_map.get(curr_seq).state == State.Decided);
         }
-    	System.out.println(this.me + " dies ");
+    	//System.out.println(this.me + " dies ");
     }
 
     private Comparator<Response> responseComparator = new Comparator<Response>() {
@@ -301,8 +301,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
         // Broadcast prepare msg
         for (int i = 0; i < peers.length; i++) {
-        	System.out.println(this.me + " sends prepare to peer  "+i
-        			+" with pn: "  + propn + " value: " + value.toString());
+        	
             if (i != me)
                 response = Call("Prepare", request, i);
             else
@@ -366,7 +365,7 @@ public class Paxos implements PaxosRMI, Runnable{
             instance.value = req.value; //now the value accepted is the highest
             instance.highest_proposal = req.proposal;
 
-        	System.out.println(this.me + " accepts P# " + req.proposal + " with value " + req.value);
+        	//System.out.println(this.me + " accepts P# " + req.proposal + " with value " + req.value);
         }
         // Prepare request rejected
         else {
@@ -375,7 +374,7 @@ public class Paxos implements PaxosRMI, Runnable{
             response.proposal = instance.highest_proposal;
             response.value = instance.value;
 
-        	System.out.println(this.me + " rejects P# " + req.proposal);
+        	//System.out.println(this.me + " rejects P# " + req.proposal);
         
         }
         return response;
@@ -383,7 +382,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
     private Response sendAcceptToAll(int seq, int pid, int peer, Object value, int done) {
 
-    	System.out.println("Broadcast Accept: " + pid);
+    	//System.out.println("Broadcast Accept: " + pid);
         Response response;
         Request request = new Request(seq, pid, peer, value, done);
         int accepted_cnt = 0;
@@ -405,7 +404,7 @@ public class Paxos implements PaxosRMI, Runnable{
                     accepted_cnt++;
                     accepted_list.add(response);
 
-                	System.out.println(this.me + " adds acceptance for pn: "+ response.proposal);
+                	//System.out.println(this.me + " adds acceptance for pn: "+ response.proposal);
                 } else {                            // Msg rejected
                     refused_list.add(response);
                 }
@@ -454,7 +453,7 @@ public class Paxos implements PaxosRMI, Runnable{
             response.proposal = req.proposal;
             response.value = instance.value;
 
-        	System.out.println(this. me + " accepts A# " + req.proposal + " with value " + req.value);
+        	//System.out.println(this. me + " accepts A# " + req.proposal + " with value " + req.value);
             
         }
         // Accept request rejected
@@ -464,7 +463,7 @@ public class Paxos implements PaxosRMI, Runnable{
             response.proposal = instance.highest_accepted;
             response.value = instance.value;
 
-        	System.out.println(this.me + " rejects A#: " + req.proposal);
+        	//System.out.println(this.me + " rejects A#: " + req.proposal);
         }
         return response;
     }
@@ -472,7 +471,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
     private void sendDecidedToAll(int seq, int proposal, int peer, Object value, int done){
 
-    	System.out.println("Send Decide with proposal number " + proposal);
+    	//System.out.println("Send Decide with proposal number " + proposal);
         Response response;
         Request request = new Request(seq, proposal, peer, value, done);
 
@@ -492,7 +491,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
     public Response Decide(Request req){
         // your code here
-    	System.out.println(this.me + " Deciding on pn: " + req.proposal + " with val " + req.value);
+    	//System.out.println(this.me + " Deciding on pn: " + req.proposal + " with val " + req.value);
         done_list.set(req.peer, req.done);
         cleanUp();
         Instance instance = getInstance(req.seq);
@@ -511,7 +510,7 @@ public class Paxos implements PaxosRMI, Runnable{
     public void Done(int seq) {
         // Your code here
 
-    	System.out.println(this.me + " finished: " + seq);
+    	//System.out.println(this.me + " finished: " + seq);
         done_list.set(me, seq);
         cleanUp();
     }
@@ -602,12 +601,12 @@ public class Paxos implements PaxosRMI, Runnable{
      * Please don't change these four functions.
      */
     public void Kill(){
-        this.dead.getAndSet(true);
+        //this.dead.getAndSet(true);
         if(this.registry != null){
             try {
                 UnicastRemoteObject.unexportObject(this.registry, true);
             } catch(Exception e){
-                System.out.println("None reference");
+                //System.out.println("None reference");
             }
         }
     }

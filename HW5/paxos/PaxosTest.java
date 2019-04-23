@@ -92,6 +92,9 @@ public class PaxosTest {
         System.out.println("Test: Single proposer ...");
         pxa[0].Start(0, "hello");
         waitn(pxa, 0, npaxos);
+
+        if(consensus != null)
+        	System.out.println(consensus);
         System.out.println("... Passed");
 
 
@@ -100,13 +103,33 @@ public class PaxosTest {
             pxa[i].Start(1, 77);
         }
         waitn(pxa, 1, npaxos);
+
+        if(consensus != null)
+        	System.out.println(consensus);
         System.out.println("... Passed");
 
+        System.out.println("Test: Many proposers, two values ...");
+        for(int i = 0; i < npaxos; i++){
+        	if(i % 2 == 0)
+        		pxa[i].Start(10, "even");
+        	else
+        		pxa[i].Start(10, "odd");
+        }
+        waitn(pxa, 1, npaxos);
+
+        if(consensus != null)
+        	System.out.println(consensus);
+        System.out.println("... Passed");
+
+        
         System.out.println("Test: Many proposers, different values ...");
         pxa[0].Start(2, 100);
         pxa[1].Start(2, 101);
         pxa[2].Start(2, 102);
         waitn(pxa, 2, npaxos);
+
+        if(consensus != null)
+        	System.out.println(consensus);
         System.out.println("... Passed");
 
         System.out.println("Test: Out-of-order instances ...");
@@ -153,7 +176,6 @@ public class PaxosTest {
         int nd = ndecided(pxa, 1);
         assertFalse("a deaf peer heard about a decision " + nd, nd != npaxos-2);
         
-        System.out.println("--goodbye--");
         if(consensus != null)
         	System.out.println(consensus);
         pxa[0].Start(1, "xxx");
@@ -165,7 +187,7 @@ public class PaxosTest {
         }
         nd = ndecided(pxa, 1);
         assertFalse("a deaf peer heard about a decision " + nd, nd != npaxos-1);
-        System.out.println("--xxx--");
+       
         if(consensus != null)
         	System.out.println(consensus);
         pxa[npaxos-1].Start(1, "yyy");

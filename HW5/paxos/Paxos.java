@@ -219,6 +219,7 @@ public class Paxos implements PaxosRMI, Runnable{
             }
             else {
                 n = prepareResponse.pid.proposal_num;                         // Update unique num
+                this.value = prepareResponse.value;
                 continue;
             }
 
@@ -259,7 +260,7 @@ public class Paxos implements PaxosRMI, Runnable{
         PID pid_a = null;
         PriorityQueue<Response> accepted_list = new PriorityQueue<>();
         PriorityQueue<Response> refused_list = new PriorityQueue<>();
-
+        Object localvalue = value;
         // Broadcast prepare msg
         for (int i = 0; i < peers.length; i++) {
             if (i != me)
@@ -285,21 +286,21 @@ public class Paxos implements PaxosRMI, Runnable{
         Response proposalResponse;
         if (accepted_list.size() > peers.length / 2) {   // Majortity succeeded
             if (accepted_list.peek().value != null) {
-                value = accepted_list.peek().value;      // Update Value from highest proposal
+                localvalue = accepted_list.peek().value;      // Update Value from highest proposal
             }
         } else {                                         // Failed to get majortiy
-            if (refused_list.peek().pid != null) {
+            if (refused_list.peek().pid != null && refused_list.peek().value != null) {
             	n = (refused_list.peek().pid.proposal_num/10 +1)*10 + this.me;   
-            	//value = accepted_list.peek().value;      // Update Value from highest proposal
+            	localvalue = refused_list.peek().value;      // Update Value from highest proposal
             }
                 //n = refused_list.peek().pid.proposal_num + 1;  // Update unique num from former num if not null
             else {
             	n = (n/10 +1)*10 + this.me;                                        // Update unique num by inc
             }
-            proposalResponse = new Response(false, new PID(n, this.me), null, -1);
+            proposalResponse = new Response(false, new PID(n, this.me), localvalue, -1);
             return proposalResponse;                     // Return failure msg
         }
-        proposalResponse = new Response(true, new PID(n, this.me), value, this.done_list.get(me));
+        proposalResponse = new Response(true, new PID(n, this.me), localvalue, this.done_list.get(me));
         return proposalResponse;                         // Return Success msg
     }
 
@@ -367,7 +368,7 @@ public class Paxos implements PaxosRMI, Runnable{
         Response acceptResponse;
         if (accepted_list.size() > peers.length / 2) {   // Majortity succeeded
             if (accepted_list.peek().value != null) {
-                value = accepted_list.peek().value;      // Update Value from highest proposal
+ //               value = accepted_list.peek().value;      // Update Value from highest proposal
             }
         } else {                                         // Failed to get majortiy
             if (refused_list.size() > 0 && refused_list.peek().pid != null) {

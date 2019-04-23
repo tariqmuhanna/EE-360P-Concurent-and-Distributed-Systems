@@ -10,7 +10,7 @@ import static org.junit.Assert.assertFalse;
  * For your reference only.
  */
 public class PaxosTest {
-
+	private Object consensus;
     private int ndecided(Paxos[] pxa, int seq){
         int counter = 0;
         Object v = null;
@@ -19,21 +19,26 @@ public class PaxosTest {
             if(pxa[i] != null){
                 ret = pxa[i].Status(seq);
                 if(ret.state == State.Decided) {
-                	System.out.println(ret.v);
+                	
                     assertFalse("decided values do not match: seq=" + seq + " i=" + i + " v=" + v + " v1=" + ret.v, counter > 0 && !v.equals(ret.v));
                     counter++;
                     v = ret.v;
                 }
+               
 
             }
         }
+        consensus = v;
         return counter;
     }
 
     private void waitn(Paxos[] pxa, int seq, int wanted){
+    	consensus = null;
         int to = 10;
+        int nd = 0;
         for(int i = 0; i < 50; i++){
-            if(ndecided(pxa, seq) >= wanted){
+        	nd = ndecided(pxa, seq);
+            if( nd >= wanted){
                 break;
             }
             try {
@@ -46,7 +51,7 @@ public class PaxosTest {
             }
         }
 
-        int nd = ndecided(pxa, seq);
+        //int nd = ndecided(pxa, seq);
         assertFalse("too few decided; seq=" + seq + " ndecided=" + nd + " wanted=" + wanted, nd < wanted);
 
     }
@@ -134,7 +139,8 @@ public class PaxosTest {
         System.out.println("Test: Deaf proposer ...");
         pxa[0].Start(0, "hello");
         waitn(pxa, 0, npaxos);
-
+        if(consensus != null)
+        	System.out.println(consensus);
         pxa[1].ports[0]= 1;
         pxa[1].ports[npaxos-1]= 1;
         pxa[1].Start(1, "goodbye");
@@ -146,7 +152,10 @@ public class PaxosTest {
         }
         int nd = ndecided(pxa, 1);
         assertFalse("a deaf peer heard about a decision " + nd, nd != npaxos-2);
-
+        
+        System.out.println("--goodbye--");
+        if(consensus != null)
+        	System.out.println(consensus);
         pxa[0].Start(1, "xxx");
         waitn(pxa, 1, npaxos-1);
         try {
@@ -156,9 +165,13 @@ public class PaxosTest {
         }
         nd = ndecided(pxa, 1);
         assertFalse("a deaf peer heard about a decision " + nd, nd != npaxos-1);
-
+        System.out.println("--xxx--");
+        if(consensus != null)
+        	System.out.println(consensus);
         pxa[npaxos-1].Start(1, "yyy");
         waitn(pxa, 1, npaxos);
+        if(consensus != null)
+        	System.out.println(consensus);
         System.out.println("... Passed");
         cleanup(pxa);
 

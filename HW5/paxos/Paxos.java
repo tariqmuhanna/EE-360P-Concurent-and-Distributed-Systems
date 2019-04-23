@@ -288,8 +288,10 @@ public class Paxos implements PaxosRMI, Runnable{
                 value = accepted_list.peek().value;      // Update Value from highest proposal
             }
         } else {                                         // Failed to get majortiy
-            if (refused_list.peek().pid != null)
+            if (refused_list.peek().pid != null) {
             	n = (refused_list.peek().pid.proposal_num/10 +1)*10 + this.me;   
+            	//value = accepted_list.peek().value;      // Update Value from highest proposal
+            }
                 //n = refused_list.peek().pid.proposal_num + 1;  // Update unique num from former num if not null
             else {
             	n = (n/10 +1)*10 + this.me;                                        // Update unique num by inc
@@ -313,10 +315,13 @@ public class Paxos implements PaxosRMI, Runnable{
 //        if (instance.pid == null || req.compare(instance.pid) < 0) {
         if (instance.pid == null || req.pid.compareTo(instance.pid) < 0) {
             instance.pid = req.pid;
+           // instance.value = req.value;
+            response.value = instance.value;
             response.accepted = true;
             response.done = done_list.get(this.me);
             response.pid = instance.pid;
-            response.value = instance.value;
+            
+            
 
         }
         // Prepare request rejected

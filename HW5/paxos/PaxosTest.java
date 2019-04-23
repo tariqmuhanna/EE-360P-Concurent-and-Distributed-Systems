@@ -19,6 +19,7 @@ public class PaxosTest {
             if(pxa[i] != null){
                 ret = pxa[i].Status(seq);
                 if(ret.state == State.Decided) {
+                	System.out.println(ret.v);
                     assertFalse("decided values do not match: seq=" + seq + " i=" + i + " v=" + v + " v1=" + ret.v, counter > 0 && !v.equals(ret.v));
                     counter++;
                     v = ret.v;

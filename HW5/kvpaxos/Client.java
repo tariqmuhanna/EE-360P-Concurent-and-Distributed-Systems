@@ -63,11 +63,11 @@ public class Client {
     public Integer Get(String key){
         // Your code here
     	Op getOp = new Op("get", cliSeq, key, -1);
-    	kvpaxos.Request getCmd = new kvpaxos.Request(getOp, cliSeq);
+    	kvpaxos.Request getCmd = new kvpaxos.Request(getOp, cliSeq);	//server should come up with the cliSeq (unique proposal number)
     	kvpaxos.Response getResp;
     	//for(int i = 0; i < servers.length; i++) {
     		System.out.println("calling get to client");
-    		getResp = this.Call("Get", getCmd, 0); //0 is hardcode should be flexible
+    		getResp = Call("Get", getCmd, 0); //0 is hardcode should be flexible
     		System.out.println(getResp.value);
     		//call for each server
     		if(getResp != null) {

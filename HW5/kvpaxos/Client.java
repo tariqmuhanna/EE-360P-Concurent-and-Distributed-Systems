@@ -62,47 +62,22 @@ public class Client {
     // RMI handlers
     public Integer Get(String key){
         // Your code here
-    	Op getOp = new Op("get", cliSeq, key, -1);
+    	Op getOp = new Op("Get", cliSeq, key, -1);
     	kvpaxos.Request getCmd = new kvpaxos.Request(getOp, cliSeq);	//server should come up with the cliSeq (unique proposal number)
     	kvpaxos.Response getResp;
-    	//for(int i = 0; i < servers.length; i++) {
-    		System.out.println("calling get to client");
-    		getResp = Call("Get", getCmd, 0); //0 is hardcode should be flexible
-    		System.out.println(getResp.value);
-    		//call for each server
-    		if(getResp != null) {
-    			return (Integer)getResp.value;
-    		}
-    	//}
+    	
+		System.out.println("client calls get ");
+		getResp = Call("Get", getCmd, 0); //0 is hardcode should be flexible
+		
+		//call for each server
+		if(getResp != null) {
+			System.out.println("client gets: " + getResp.value);
+			Op temp = (Op)getResp.value;
+			return temp.value;
+		}
     	
     	
     	
-//    	if(pxa.length == 0)
-//    		return 0;
-//    	
-//    	pxa[0].Start(cliSeq, getCmd);
-//    	Paxos.retStatus ret;
-//    	
-//    	int numDec = 0;
-//    	while(numDec < pxa.length) {
-//	    	for(int i = 0; i < pxa.length; i++){
-//	    		if(pxa[i] != null){
-//	                ret = pxa[i].Status(cliSeq);
-//	                
-//	                if(ret.state == State.Decided) {
-//	                	if(numDec > 0 && lastVal != ret.v)
-//	                		return -1;
-//	                    numDec ++;
-//	                    lastVal = ret.v;
-//	                }
-//	
-//	            }
-//	    	}
-//    	}
-//    	if (lastVal != null) {
-//    		Response finalOp = (Response)lastVal;
-//    		return finalOp.value;
-//    	}
     	
         return -1;
         //-1 means error, 0 means no paxos
@@ -110,7 +85,7 @@ public class Client {
 
     public boolean Put(String key, Integer value){
         // Your code here
-    	Op getOp = new Op("put", cliSeq, key, -1);
+    	Op getOp = new Op("Put", cliSeq, key, value);
     	kvpaxos.Request getCmd = new kvpaxos.Request(getOp, cliSeq);
     	kvpaxos.Response getResp;
     	//for(int i = 0; i < servers.length; i++) {

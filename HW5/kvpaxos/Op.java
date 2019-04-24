@@ -18,5 +18,8 @@ public class Op implements Serializable{
         this.value = value;
     
     }
-    
+    public String toString() {
+    	
+    	return key + " " + value;
+    }
 }

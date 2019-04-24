@@ -108,19 +108,31 @@ public class PaxosTest {
         	System.out.println(consensus);
         System.out.println("... Passed");
 
-        System.out.println("Test: Many proposers, two values ...");
+        System.out.println("Test: Many proposers, two values, same seq number...");
         for(int i = 0; i < npaxos; i++){
         	if(i % 2 == 0)
         		pxa[i].Start(10, "even");
         	else
         		pxa[i].Start(10, "odd");
         }
-        waitn(pxa, 1, npaxos);
+        waitn(pxa, 10, npaxos);
 
         if(consensus != null)
         	System.out.println(consensus);
         System.out.println("... Passed");
 
+        System.out.println("Test: Many proposers, two values, forgotten seq number...");
+        for(int i = 0; i < npaxos; i++){
+        	if(i % 2 == 0)
+        		pxa[i].Start(0, "good");
+        	else
+        		pxa[i].Start(0, "bye");
+        }
+        waitn(pxa, 0, npaxos);
+
+        if(consensus != null)
+        	System.out.println(consensus);
+        System.out.println("... Passed");
         
         System.out.println("Test: Many proposers, different values ...");
         pxa[0].Start(2, 100);

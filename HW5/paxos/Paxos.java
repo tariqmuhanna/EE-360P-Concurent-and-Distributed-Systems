@@ -65,7 +65,7 @@ public class Paxos implements PaxosRMI, Runnable{
      * are in peers[]. The ports are in ports[].
      */
     public Paxos(int me, String[] peers, int[] ports){
-
+    	
         this.me = me;
         this.peers = peers;
         this.ports = ports;
@@ -207,6 +207,7 @@ public class Paxos implements PaxosRMI, Runnable{
         while (this.instance_map.get(curr_seq).state == State.Pending) {
             //*****PREPARE PHASE*****
             // Send Prepare msg to everyone
+
             Response prepareResponse = sendPrepareToAll(curr_seq,
                     new PID(n, this.me),
                     this.me,
@@ -226,6 +227,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
             //*****ACCEPT PHASE*****
             // Send accept msg to everyone
+
             Response acceptResponse = sendAcceptToAll(curr_seq,
                     new PID(n, this.me),
                     this.me,
@@ -244,6 +246,7 @@ public class Paxos implements PaxosRMI, Runnable{
 
             //*****DECIDE PHASE*****
             // Send decide msg to everyone
+
             sendDecidedToAll(curr_seq, new PID(n, me), me, value, done_list.get(me));
         }
     }
@@ -434,6 +437,7 @@ public class Paxos implements PaxosRMI, Runnable{
                 cleanUp();
             }
         }
+        
 
     }
 
@@ -447,6 +451,7 @@ public class Paxos implements PaxosRMI, Runnable{
         instance.value = req.value;
         instance.state = State.Decided;
         Response response = new Response(false, instance.pid, instance.value, done_list.get(me));
+        
         return response;
     }
 

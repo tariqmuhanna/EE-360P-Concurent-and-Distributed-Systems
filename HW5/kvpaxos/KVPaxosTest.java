@@ -32,11 +32,34 @@ public class KVPaxosTest {
         }
 
         Client ck = new Client(peers, ports);
+        Client ck2 = new Client(peers, ports);
+        
         System.out.println("Test: Basic put/get ...");
         ck.Put("app", 6);
         check(ck, "app", 6);
         ck.Put("a", 70);
         check(ck, "a", 70);
+
+        System.out.println("... Passed");
+        System.out.println("Test: 2 client put/get ...");
+        ck.Put("clash", 1);
+        ck2.Put("clash", 2);
+        Integer c1 = ck.Get("clash");
+        Integer c2 = ck2.Get("clash");
+        assertTrue("No consensus", c1.equals(c2));
+
+        System.out.println("... Passed");
+        
+        System.out.println("Test: sequential client put/get ...");
+        ck.Put("first", 1);
+        ck.Put("second", 2);
+        ck.Put("third", 3);
+        ck2.Put("fourth", 4);
+        
+        c1 = ck.Get("fourth");
+        c2 = ck2.Get("first");
+        assertTrue("No consensus", c1.equals(4));
+        assertTrue("No consensus", c2.equals(1));
 
         System.out.println("... Passed");
 

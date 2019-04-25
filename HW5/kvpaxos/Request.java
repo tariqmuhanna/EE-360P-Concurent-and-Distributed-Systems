@@ -1,4 +1,5 @@
 package kvpaxos;
+import paxos.*;
 import java.io.Serializable;
 
 /**
@@ -9,7 +10,18 @@ import java.io.Serializable;
 public class Request implements Serializable {
     static final long serialVersionUID=11L;
     // Your data here
-
+    Op oper;
+    int seq;
+    Request(){
+    	this.oper = null;
+    	seq = -1;
+    }
+    
+    Request(Op op, int seq){
+        this.oper = op;
+        this.seq = seq;
+    }
+    
 
     // Your constructor and methods here
 

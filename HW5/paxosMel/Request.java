@@ -48,22 +48,24 @@ public class Request implements Serializable {
     int seq;
     Object value;
     int peer;
-    PID pid;
+    //PID pid;
     int done;
-
+    int proposal;
 
     Request() {
         this.seq = -1;
-        this.pid = null;
+       // this.pid = null;
         this.peer = -1;
         this.value = null;
         this.done = -1;
+        this.proposal = -1;
     }
 
 
-    Request(int seq, PID pid, int peer, Object value, int done) {
+    Request(int seq, int proposal, int peer, Object value, int done) {
         this.seq = seq;
-        this.pid = pid;
+        this.proposal = proposal;
+        //this.pid = pid;
         this.peer = peer;
         this.value = value;
         this.done = done;
